@@ -1,15 +1,31 @@
 package poker;
 
+import akka.actor.ActorRef;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
+
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class OutputTerminal {
+	ActorRef dealer;
+	ActorRef player;
+
+	public OutputTerminal(ActorRef dealer, ActorRef player){
+		this.dealer = dealer;
+		this.player = player;
+	}
 	
 	public void printout(String Output){
+
+		player.tell(Output, dealer);
 		
-		System.setOut(GameOfPoker.defaultPrintStream);
+		/*System.setOut(GameOfPoker.defaultPrintStream);
 		
 		System.out.println("TERMINAL##>"+Output);
 		
@@ -17,17 +33,33 @@ public class OutputTerminal {
 			  public void write(int b) {
 			    // NO-OP
 			  }
-			}));
+			}));*/
+
 	}
 	
-	public String readInString(){
+	public String readInString()  {
+
+		//player.tell("I need your input now.", dealer);
+		Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+		Future<Object> future = Patterns.ask(player, "NeedReply", timeout);
+		String result = "null";
+		try {
+			result = (String) Await.result(future, timeout.duration());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println(result);
+
+		return result;
+
+		/*
 		Scanner reader = new Scanner(System.in);
 		
 		String input = reader.next();
 		
-		return input;
+		return input;*/
 	}
-	
+	/*
 	public int readInSingleInt(){
 		Scanner reader = new Scanner(System.in);
 		
@@ -48,6 +80,6 @@ public class OutputTerminal {
 			}
 		}
 		return numbers;
-	}
+	}*/
 	
 }

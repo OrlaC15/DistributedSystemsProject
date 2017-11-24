@@ -1,5 +1,7 @@
 package poker;
 
+import akka.actor.ActorRef;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -30,7 +32,7 @@ public class HandOfPoker {
 	HashMap<PokerPlayer, Integer> betRecordz = new HashMap<PokerPlayer, Integer>();
 
 	
-	public HandOfPoker(ArrayList<PokerPlayer> players, int ante, DeckOfCards deck, OutputTerminal UI) throws IOException{
+	public HandOfPoker(ArrayList<PokerPlayer> players, int ante, DeckOfCards deck, OutputTerminal UI, ActorRef player, ActorRef dealer) throws IOException{
 		this.players = new ArrayList<PokerPlayer>();
 		this.players.addAll(players);
 		for (int i=0; i< this.players.size(); i++){
@@ -38,7 +40,7 @@ public class HandOfPoker {
 		}
 		this.ante = ante;
 		this.deck = deck;
-		this.UI = new OutputTerminal();
+		this.UI = new OutputTerminal(dealer,player);
 		this.human = (HumanPokerPlayer) players.get(0);
 		//pot.set(0);
 
@@ -77,8 +79,7 @@ public class HandOfPoker {
 	 * Runs the events of the game from a very high level
 	 * @return
 	 * @throws InterruptedException 
-	 * @throws IOException 
-	 * @throws TwitterException 
+	 * @throws IOException
 	 */
 	void gameLoop() throws InterruptedException, IOException {
 
@@ -272,7 +273,6 @@ public class HandOfPoker {
 	 * Takes bets from players. Players can fold their hands here.
 	 * @return Number of chips to be added to the pot
 	 * TODO: Should be a nested loop for going around the table until all bets are seen or folded
-	 * @throws TwitterException 
 	 */
 
 
@@ -557,8 +557,7 @@ public class HandOfPoker {
 	 * All players discard up to three cards from their hand and re-deal themselves 
 	 * and are re-dealt three from the deck
 	 * @throws InterruptedException 
-	 * @throws IOException 
-	 * @throws TwitterException 
+	 * @throws IOException
 	 */
 	private void discardCards() throws InterruptedException, IOException {
 		//human.discard();
@@ -652,7 +651,6 @@ public class HandOfPoker {
 	 * Awards winner the pot and declares the amount.
 	 * TODO Implement when split pot betting occurs
 	 * @param winners
-	 * @throws TwitterException 
 	 */
 	private void awardWinner(ArrayList<PokerPlayer> winners)  { 
 
@@ -704,7 +702,7 @@ public class HandOfPoker {
 	 */
 	public static void main(String[] args) throws InterruptedException {
 		DeckOfCards deck = new DeckOfCards();
-		OutputTerminal console = new OutputTerminal();
+		OutputTerminal console = new OutputTerminal(null,null);
 		int ante = 1;
 		//TwitterFactory twitterO = new TwitterFactory();
 		//TwitterStreamer twitterS = new TwitterStreamer();

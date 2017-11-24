@@ -1,5 +1,8 @@
 package poker;
 
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -18,10 +21,17 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 	}
 	 */
 
-	public HumanPokerPlayer(DeckOfCards inputDeck) throws InterruptedException {
+	ActorRef player;
+	ActorRef dealer;
+	OutputTerminal output;
+
+	public HumanPokerPlayer(DeckOfCards inputDeck, ActorRef dealer, ActorRef player, OutputTerminal UI) throws InterruptedException {
 		super(inputDeck);
-		this.playerName = "Testy McTestface";
+		this.playerName = player.path().name();
 		a= inputDeck;
+		this.player = player;
+		this.dealer = dealer;
+		output = UI;
 		// TODO Auto-generated constructor stub
 	}
 
@@ -132,7 +142,6 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 
 	}
 
-	OutputTerminal output = new OutputTerminal();
 
 	/**
 	 * This asks the player if he want to discard how many he wants to discard and which cards, 
@@ -479,10 +488,10 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 		return isFold;
 	}
 
-	public void runApp() throws InterruptedException,   IOException{
+	/*public void runApp() throws InterruptedException,   IOException{
 
 		DeckOfCards deck = new DeckOfCards();
-		HumanPokerPlayer human = new HumanPokerPlayer(deck);
+		HumanPokerPlayer human = new HumanPokerPlayer(deck, dealer, player);
 
 		System.out.println(human.hand);
 
@@ -491,12 +500,12 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 		System.out.println(human.hand);
 
 		human.Fold();
-	}
+	}*/
 
 	public static void main(String[] args) throws InterruptedException,   IOException {
 
 		DeckOfCards deck = new DeckOfCards();
-		HumanPokerPlayer human = new HumanPokerPlayer(deck);
+		HumanPokerPlayer human = new HumanPokerPlayer(deck, null,null, null);
 
 		System.out.println(human.hand);
 

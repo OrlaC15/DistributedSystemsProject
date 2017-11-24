@@ -1,11 +1,6 @@
 package poker;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Random;
 
 
@@ -14,13 +9,13 @@ import java.util.Random;
 public class AutomatedPokerPlayer extends PokerPlayer {
 	private int playerType;
 	private int playerBluffProbability;
-	private static final String FILE_OF_NAMES = "PlayerNames/AutomatedPokerPlayerNames.txt";
-	private static final String COCKY_PLAYER_RAISE_QUOTES = "PlayerQuotes/CockyPlayerRaiseQuotes.txt";
-	private static final String COCKY_PLAYER_SEE_QUOTES = "PlayerQuotes/CockyPlayerSeeQuotes.txt";
-	private static final String COCKY_PLAYER_FOLD_QUOTES = "PlayerQuotes/CockyPlayerFoldQuotes.txt";;
-	private static final String CONSERVATIVE_PLAYER_RAISE_QUOTES = "PlayerQuotes/ConservativePlayerRaiseQuotes.txt";
-	private static final String CONSERVATIVE_PLAYER_SEE_QUOTES = "PlayerQuotes/ConservativePlayerSeeQuotes.txt";
-	private static final String CONSERVATIVE_PLAYER_FOLD_QUOTES = "PlayerQuotes/ConservativePlayerFoldQuotes.txt";
+	private static final String FILE_OF_NAMES = "src/PlayerNames/AutomatedPokerPlayerNames.txt";
+	private static final String COCKY_PLAYER_RAISE_QUOTES = "src/PlayerQuotes/CockyPlayerRaiseQuotes.txt";
+	private static final String COCKY_PLAYER_SEE_QUOTES = "src/PlayerQuotes/CockyPlayerSeeQuotes.txt";
+	private static final String COCKY_PLAYER_FOLD_QUOTES = "src/PlayerQuotes/CockyPlayerFoldQuotes.txt";;
+	private static final String CONSERVATIVE_PLAYER_RAISE_QUOTES = "src/PlayerQuotes/ConservativePlayerRaiseQuotes.txt";
+	private static final String CONSERVATIVE_PLAYER_SEE_QUOTES = "src/PlayerQuotes/ConservativePlayerSeeQuotes.txt";
+	private static final String CONSERVATIVE_PLAYER_FOLD_QUOTES = "src/PlayerQuotes/ConservativePlayerFoldQuotes.txt";
 	private static final int COCKY_RAISE = 0;
 	private static final int COCKY_SEE = 1;
 	private static final int COCKY_FOLD = 2;
@@ -30,7 +25,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 
 	//private static TwitterInteraction twitter;
 
-	OutputTerminal output = new OutputTerminal();
+	OutputTerminal output = new OutputTerminal(null,null);
 	private int currentBet;
 
 	/*public AutomatedPokerPlayer(DeckOfCards inputDeck, TwitterInteraction t) throws InterruptedException {
@@ -51,7 +46,6 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	
 	/**
 	 * Counts the number of lines in a given file
-	 * @param location of File 
 	 * @return
 	 * @throws IOException
 	 */
@@ -128,7 +122,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 		try{
 			Random rand = new Random();
 			int number_line = rand.nextInt(countFileLines(filename));
-			@SuppressWarnings("resource")
+
 			BufferedReader read = new BufferedReader(new FileReader(filename));
 			String line;
 			for(int i=0; i<=number_line; i++){
@@ -140,6 +134,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 			return out;
 		}
 		catch(Exception e){
+			e.printStackTrace();
 			return out;
 		}
 	}
@@ -182,9 +177,9 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	 * Produces a random integer value in the range passed in as a parameter,
 	 * from one up to and including the range value.
 	 */
-	private int getRandomValue(int range){	
-		Random rand = new Random();
-		return rand.nextInt(range) + 1;
+	private int getRandomValue(int range){
+
+		return new Random().nextInt(range) + 1;
 	}
 
 	/**
@@ -416,7 +411,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 
 		DeckOfCards deck = new DeckOfCards();
 		//TwitterInteraction t = new TwitterInteraction(TwitterStreamer.twitter);
-		OutputTerminal t = new OutputTerminal();
+		OutputTerminal t = new OutputTerminal(null,null);
 		//ArrayList<AutomatedPokerPlayer> players = new ArrayList<AutomatedPokerPlayer>();
 		AutomatedPokerPlayer playerOne = new AutomatedPokerPlayer(deck, t);
 		AutomatedPokerPlayer playerTwo = new AutomatedPokerPlayer(deck, t);

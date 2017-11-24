@@ -1,5 +1,7 @@
 package poker;
 
+import akka.actor.ActorRef;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -15,7 +17,10 @@ public class GameOfPoker implements Runnable{
 	boolean playerWin = false;
 	boolean playerLose = false;
 	boolean continueGame = true;
-	OutputTerminal a = new OutputTerminal();
+
+	ActorRef player;
+	ActorRef dealer;
+	OutputTerminal a;
 
 	/*
 	public GameOfPoker(String username, TwitterInteraction t, DeckOfCards d) throws InterruptedException{
@@ -29,7 +34,7 @@ public class GameOfPoker implements Runnable{
 			players.add(computerPlayer);	
 		}
 	}*/
-	
+	/*
 	public GameOfPoker(String username,  DeckOfCards d) throws InterruptedException{
 		playerName = username;
 		deck = d;
@@ -39,13 +44,28 @@ public class GameOfPoker implements Runnable{
 			PokerPlayer computerPlayer = new AutomatedPokerPlayer(deck, a);
 			players.add(computerPlayer);	
 		}
-	}
+	}*/
 	
 	
 
 	public static final int PLAYER_POT_DEFAULT = 20;
 	public static final int ROUND_NUMBER = 0;
 	int ante = 1;
+
+	public GameOfPoker(ActorRef dealer, ActorRef player, DeckOfCards deck) throws InterruptedException {
+		this.player = player;
+		this.dealer = dealer;
+		playerName = player.path().name();
+		this.deck = deck;
+		a = new OutputTerminal(dealer, player);
+		humanPlayer = new HumanPokerPlayer(deck,dealer,player,a);
+		players.add(humanPlayer);
+		for(int i=0;i<5;i++){
+			PokerPlayer computerPlayer = new AutomatedPokerPlayer(deck, a);
+			players.add(computerPlayer);
+		}
+
+	}
 
 	//Runnable code segment
 	@Override
@@ -54,9 +74,8 @@ public class GameOfPoker implements Runnable{
 
 		try {
 			while(!playerWin && !playerLose && continueGame && !(Thread.currentThread().isInterrupted())){
-				HandOfPoker handOfPoker = new HandOfPoker(players,ante,deck,a);
-				
-				
+				HandOfPoker handOfPoker = new HandOfPoker(players,ante,deck,a, player, dealer);
+
 				ArrayList<PokerPlayer> nextRoundPlayers = new ArrayList<PokerPlayer>();
 				
 				for(int i=0;i<players.size();i++){
@@ -64,11 +83,11 @@ public class GameOfPoker implements Runnable{
 						nextRoundPlayers.add(players.get(i));
 					}
 					else{
-						a.printout("---Player "+players.get(i).playerName+" is out of chips, and out of the game.---");
+						player.tell("---Player "+players.get(i).playerName+" is out of chips, and out of the game.---",dealer);
 						if(players.get(i).isHuman()){
 							playerLose = true;
-							a.printout("Sorry, you are out of the game. Goodbye and thanks for playing!");
-							a.printout("To play again, Tweet with #FOAKDeal");
+							player.tell("Sorry, you are out of the game. Goodbye and thanks for playing!",dealer);
+							player.tell("To play again, Tweet with #FOAKDeal",dealer);
 							break;
 						}
 					}
@@ -77,13 +96,13 @@ public class GameOfPoker implements Runnable{
 				
 				if(players.size()==1 && !playerLose){
 					if(players.get(0).isHuman()){
-						a.printout("You have beaten the bots and won the game! Congratulations!");
-						a.printout("To play another game, Tweet with #FOAKDeal !");
+						player.tell("You have beaten the bots and won the game! Congratulations!", dealer);
+						player.tell("To play another game, Tweet with #FOAKDeal !",dealer);
 						playerWin = true;
 					}
 					else{
-						a.printout("Hard luck, you have lost the game.");
-						a.printout("You can play again by Tweeting #FOAKDeal");
+						player.tell("Hard luck, you have lost the game.", dealer);
+						player.tell("You can play again by Tweeting #FOAKDeal", dealer);
 						playerLose = true;
 					}
 				}
@@ -107,7 +126,7 @@ public class GameOfPoker implements Runnable{
 	
 	public static void main(String[] args) throws InterruptedException {
 		DeckOfCards deck = new DeckOfCards();
-		GameOfPoker test = new GameOfPoker("test", deck);
+		GameOfPoker test = new GameOfPoker(null,null, deck);
 		test.run();
 	}
 

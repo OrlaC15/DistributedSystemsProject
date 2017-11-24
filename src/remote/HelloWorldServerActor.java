@@ -31,13 +31,21 @@ public class HelloWorldServerActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        super.preStart();
+        try {
+            super.preStart();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.out.println(actorName + " started");
     }
 
     @Override
     public void postStop() {
-        super.postStop();
+        try {
+            super.postStop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.out.println(actorName + " stopped");
     }
 

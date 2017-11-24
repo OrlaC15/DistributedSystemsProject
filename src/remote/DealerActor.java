@@ -16,7 +16,11 @@ public class DealerActor extends UntypedActor {
 	private ActorRef me;
 	private static ActorRef player;
 	static volatile boolean gotPlayer = false;
-	final static String actorName = "DealerActor";
+	 static String actorName = "dz";
+
+	public DealerActor(String myName){
+		actorName = myName;
+	}
 
 	static Config createConfig() {
 		Map<String, Object> map = new HashMap<String, Object>();
@@ -29,21 +33,29 @@ public class DealerActor extends UntypedActor {
 
 	@Override
 	public void preStart() {
-		super.preStart();
+		try {
+			super.preStart();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		System.out.println(actorName + " started");
 	}
 
 	@Override
 	public void postStop() {
-		super.postStop();
+		try {
+			super.postStop();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		System.out.println(actorName + " stopped");
 	}
 
 	@Override
 	public void onReceive(Object msg) {
-		System.out.println("Player says: " + msg);
 		player = getSender();
-		System.out.print("Type a message to send to Player: ");
+		System.out.println(player.path().name()+" says: " + msg);
+		System.out.print("Type a message to send to "+player.path().name()+": ");
 		gotPlayer = true;
 	}
 

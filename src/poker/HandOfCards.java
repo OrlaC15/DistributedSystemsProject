@@ -65,7 +65,7 @@ public class HandOfCards {
 		return newDiscardProbability;
 	}
 	
-	OutputTerminal out = new OutputTerminal();
+
 	
 	public synchronized int discard() throws InterruptedException{
 		//out.printout("PT ==== " + playerType);
@@ -2114,7 +2114,7 @@ public class HandOfCards {
 		
 		DeckOfCards d = new DeckOfCards();
 		//TwitterInteraction t = new TwitterInteraction(null);
-		OutputTerminal t = new OutputTerminal();
+		OutputTerminal t = new OutputTerminal(null,null);
 		
 		PokerPlayer p1 = new AutomatedPokerPlayer(d, t);
 		PokerPlayer p2 = new AutomatedPokerPlayer(d, t);
