@@ -1,5 +1,7 @@
 package poker;
 
+import akka.actor.ActorRef;
+
 import java.util.Random;
 
 public class HandOfCards {
@@ -44,11 +46,11 @@ public class HandOfCards {
 		sort();
 	}
 	
-	public void passPlayerType(PokerPlayer pokerPlayer){
-		playerType = pokerPlayer.getPlayerType();
-		
+	public void passPlayerType(ActorRef pokerPlayer){
+		playerType = 1;// pokerPlayer.getPlayerType();
+
 	}
-	
+
 	public int getAutomatedPlayerType(){
 		return playerType;
 	}

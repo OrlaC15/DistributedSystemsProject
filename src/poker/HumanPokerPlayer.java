@@ -2,9 +2,12 @@ package poker;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class HumanPokerPlayer extends PokerPlayer implements Runnable {
@@ -130,8 +133,8 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 	 * In many cases a player will only show his/her hand if they won a hand of poker.
 	 * @return
 	 */
-	public boolean showCards(PokerPlayer handWinner){
-		if(handWinner.equals(this)){
+	public boolean showCards(String handWinner){
+		if(handWinner.compareTo(getSelf().path().toString())==0){
 			output.printout("I win, here is my hand: " + this.hand);
 			return true;
 		}
@@ -564,4 +567,116 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 		return true;
 	}
 
+	@Override
+	public void onReceive(Object o) throws Exception {
+
+		if(o.toString().compareTo("deal new hand")==0){
+			System.out.println("....dealing hand in actor "+getSelf());
+			dealNewHand();
+		}
+
+		if(o.toString().compareTo("get hand")==0){
+			System.out.println("....sending back hand["+hand+"] in actor "+getSelf());
+			getSender().tell(hand, getSelf());
+		}
+
+		if(o.toString().compareTo("get pot")==0){
+			System.out.println("....sending back pot ("+playerPot+") from ("+getSelf()+") to "+getSender());
+			getSender().tell(playerPot, ActorRef.noSender());
+		}
+
+		if(o.toString().compareTo("get opening bet")==0){
+			int oBet = openingBet();
+			System.out.println("....sending back opening bet ("+oBet+") from ("+getSelf()+") to "+getSender());
+			getSender().tell(oBet, ActorRef.noSender());
+		}
+
+		if(o.toString().contains("set split pot")){
+			boolean choice = Boolean.parseBoolean(o.toString().substring(o.toString().indexOf("set split pot"+"set split pot".length(), o.toString().length()-1)));
+			this.setSplitPot(choice);
+		}
+		if(o.toString().contains("get bet")){
+			int bet = this.getBet();
+			System.out.println("sending back the bet of "+bet+" from "+getSelf());
+			getSender().tell(bet, getSelf());
+		}
+
+		if(o.toString().contains("get call")){
+			int call = getCall();
+			getSender().tell(call, getSelf());
+		}
+
+		if(o.toString().contains("show initial cards")){
+			this.tweetInitialCards();
+		}
+
+		if(o.toString().contains("in hand bet")){
+			int bet = this.inHandBet();
+			getSender().tell(bet,getSelf());
+		}
+
+		if(o.toString().contains("get fold")){
+			boolean fold = this.Fold();
+			getSender().tell(fold,getSelf());
+		}
+
+		if(o.toString().contains("reply for next round")){
+			this.replyForNextRound();
+		}
+
+		if(o.toString().contains("are you human?")){
+			getSender().tell(true,getSelf());
+		}
+
+		if(o instanceof HandOfPoker){
+			currentRound = (HandOfPoker) o;
+		}
+
+		if(o.toString().compareTo("has matched high bet")==0){
+			getSender().tell(hasMatchedHighBet(), getSelf());
+		}
+
+		if(o.toString().compareTo("player pot")==0){
+			getSender().tell(playerPot, getSelf());
+		}
+
+		if(o.toString().compareTo("get hand type")==0){
+			getSender().tell(getHandType(), getSelf());
+		}
+
+		if(o.toString().compareTo("discard")==0){
+			int discard = discard();
+			getSender().tell(discard, getSelf());
+		}
+
+		if(o.toString().compareTo("reset current bet")==0){
+			currentBet=0;
+		}
+
+		if(o.toString().compareTo("tweet initial cards")==0){
+			tweetInitialCards();
+		}
+
+		if(o.toString().compareTo("reply for next round")==0){
+			replyForNextRound();
+		}
+
+		if(o.toString().compareTo("round overall bet")==0){
+			roundOverallBet =0;
+		}
+
+		if(o.toString().contains("show cards")){
+			String winner = o.toString().substring(o.toString().indexOf(":")+1, o.toString().length());
+			showCards(winner);
+		}
+	}
+
+	/*@Override
+	public void onReceive(Object o) throws Exception {
+		if(o instanceof Map){
+			Map map = (Map) object;
+			if(map.containsKey())
+
+		}
+	}*/
 }

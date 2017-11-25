@@ -6,9 +6,9 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import poker.DeckOfCards;
-import poker.GameOfPoker;
+import poker.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -38,7 +38,10 @@ public class GameActor extends UntypedActor {
                 final ActorRef dealer = dealerSystem.actorOf(Props.create(DealerActor.class, "Dealer"), "Dealer");
                 ActorRef player = getSender();
                 DeckOfCards deck = new DeckOfCards();
-                GameOfPoker test = new GameOfPoker(dealer, player, deck);
+
+                OutputTerminal a = new OutputTerminal(dealer,player);
+
+                GameOfPoker test = new GameOfPoker(dealer, player, deck, dealerSystem);
                 test.run();
             }
         }

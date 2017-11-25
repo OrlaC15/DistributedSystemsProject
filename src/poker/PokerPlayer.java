@@ -1,13 +1,15 @@
 package poker;
 
+import akka.actor.UntypedActor;
+
 import java.io.IOException;
 
 
-public abstract class PokerPlayer {
+public abstract class PokerPlayer extends UntypedActor {
 	private DeckOfCards deck;
 	protected HandOfPoker currentRound;
 	protected HandOfCards hand;
-	protected int playerPot;
+	public int playerPot;
 	protected int roundPot;
 	protected int highBet;
 	protected String playerName;
@@ -21,6 +23,10 @@ public abstract class PokerPlayer {
 		hand = new HandOfCards(deck);
 		playerPot = GameOfPoker.PLAYER_POT_DEFAULT;
 	}
+
+
+
+
 	
 	public void passHandOfPokerRef(HandOfPoker currentRound){
 		this.currentRound = currentRound;
@@ -102,6 +108,20 @@ public abstract class PokerPlayer {
 	public void dealNewHand() throws InterruptedException{
 		hand = new HandOfCards(deck);
 	}
+
+	@Override
+	public void onReceive(Object o) throws Exception {
+
+		if (o.toString().compareTo("deal new hand") == 0) {
+			System.out.println("....dealing hand in actor "+getSelf());
+			dealNewHand();
+		}
+
+		if (o.toString().compareTo("get hand") == 0) {
+			System.out.println("....sending back hand["+hand+"] in actor "+getSelf());
+			getSender().tell(hand, getSelf());
+		}
+	}
 		
 	public boolean hasMatchedHighBet(){
 
@@ -119,7 +139,7 @@ public abstract class PokerPlayer {
 	
 	public abstract int getBet();
 	
-	public abstract boolean showCards(PokerPlayer handWinner);
+	public abstract boolean showCards(String handWinner);
 	
 	public abstract int getPlayerType();
 	

@@ -1,6 +1,13 @@
 package poker;
 
+import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import com.sun.org.apache.bcel.internal.generic.ACONST_NULL;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,7 +22,7 @@ public class HandOfPoker {
 	final private static int OPENING_HAND = HandOfCards.ONE_PAIR_DEFAULT;
 	public int highBet = 0;
 
-	private ArrayList<PokerPlayer> players;
+	private ArrayList<ActorRef> players;
 	int ante;
 	//public static ThreadLocal<Integer> pot = new ThreadLocal<Integer>();
 	public int pot;
@@ -24,24 +31,29 @@ public class HandOfPoker {
 
 	OutputTerminal UI;
 	DeckOfCards deck;
-	HumanPokerPlayer human;
+	ActorRef human;
 
 	PrintWriter writer;
 	final static boolean PRINT_TEST_FILE = false;
 	final static boolean PRINT_BANKS_TO_UI_MORE = false;
-	HashMap<PokerPlayer, Integer> betRecordz = new HashMap<PokerPlayer, Integer>();
+	HashMap<ActorRef, Integer> betRecordz = new HashMap<ActorRef, Integer>();
+
+	ActorRef dealer;
 
 	
-	public HandOfPoker(ArrayList<PokerPlayer> players, int ante, DeckOfCards deck, OutputTerminal UI, ActorRef player, ActorRef dealer) throws IOException{
-		this.players = new ArrayList<PokerPlayer>();
+	public HandOfPoker(ArrayList<ActorRef> players, int ante, DeckOfCards deck, OutputTerminal UI, ActorRef player, ActorRef dealer) throws IOException{
+		this.players = new ArrayList<ActorRef>();
+		this.dealer = dealer;
 		this.players.addAll(players);
 		for (int i=0; i< this.players.size(); i++){
-			this.players.get(i).passHandOfPokerRef(this);
+			//this.players.get(i).passHandOfPokerRef(this);
+			this.players.get(i).tell(this,dealer);
+
 		}
 		this.ante = ante;
 		this.deck = deck;
 		this.UI = new OutputTerminal(dealer,player);
-		this.human = (HumanPokerPlayer) players.get(0);
+		this.human = (ActorRef) players.get(0);
 		//pot.set(0);
 
 		try {
@@ -88,8 +100,13 @@ public class HandOfPoker {
 		System.out.println("getting into gameLoop");
 		dealHandsUntilOpen();
 	//	twitter.postCompoundTweet();
-		human.tweetInitialCards();
+
+		//human.tweetInitialCards();
+		human.tell("tweet initial cards", dealer);
+
 		//twitter.postCompoundTweet();
+
+
 		pot += collectAntes();
 		displayPot();
 		//twitter.postCompoundTweet();
@@ -100,7 +117,7 @@ public class HandOfPoker {
 		//twitter.postCompoundTweet();
 		System.out.println("number of players "+players.size());
 		players.clear();
-		for (PokerPlayer name: betRecordz.keySet()){
+		for (ActorRef name: betRecordz.keySet()){
 			players.add(name);
 		} 
 
@@ -127,7 +144,7 @@ public class HandOfPoker {
 		}
 		else{
 			UI.printout("Everybody Folded!");
-			for (PokerPlayer name: betRecordz.keySet()){
+			for (ActorRef name: betRecordz.keySet()){
 
 				String key =name.toString();
 				String value = betRecordz.get(name).toString();  
@@ -137,7 +154,9 @@ public class HandOfPoker {
 		}
 
 		//human.currentbet = 0;
-		human.replyForNextRound();
+
+		//human.replyForNextRound();
+		human.tell("reply for next round", dealer);
 
 
 		if (PRINT_TEST_FILE){
@@ -154,15 +173,29 @@ public class HandOfPoker {
 		int lowestPot = Integer.MAX_VALUE;
 		String lowestPotName = null;
 		for (int i=0; i<players.size(); i++){
-			if (players.get(i).playerPot < lowestPot){
-				lowestPot = players.get(i).playerPot;
-				lowestPotName = players.get(i).playerName;
+			System.out.println(i);
+			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+			Future<Object> future = Patterns.ask(players.get(i), "get pot", timeout);
+			int pot = 0;
+			try {
+				pot = (Integer) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			if (pot < lowestPot){
+				//lowestPot = players.get(i).playerPot;
+				//lowestPotName = players.get(i).playerName;
+				lowestPot = pot;
+				lowestPotName = players.get(i).path().name();
 			}
 		}
 
 		for (int i=0; i<players.size(); i++){
-			players.get(i).lowestPotBetLimit = lowestPot;
-			players.get(i).lowestPotPlayerName = lowestPotName;
+			//players.get(i).lowestPotBetLimit = lowestPot;
+			//players.get(i).lowestPotPlayerName = lowestPotName;
+			players.get(i).tell("set lowest pot:"+lowestPot, dealer);
+			players.get(i).tell("lowest pot player name:"+lowestPotName,dealer);
 		}
 	}
 
@@ -228,7 +261,10 @@ public class HandOfPoker {
 
 			for (int i=0; i<players.size(); i++){
 				UI.printout("Dealing");
-				players.get(i).dealNewHand();
+				ActorRef currentRef = players.get(i);
+				System.out.println("current ref "+currentRef);
+				currentRef.tell("deal new hand", dealer);
+				//players.get(i).dealNewHand();
 			}
 		} while (checkOpen() == false);
 	}
@@ -240,10 +276,24 @@ public class HandOfPoker {
 	private boolean checkOpen() {
 		boolean openingHand = false;
 		for (int i=0; i<players.size(); i++){
-			if (players.get(i).hand.getGameValue() >= OPENING_HAND){
+			System.out.println(i+" out of "+players.size());
+			ActorRef currentRef = players.get(i);
+			System.out.println("current ref "+currentRef);
+
+
+			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+			Future<Object> future = Patterns.ask(currentRef, "get hand", timeout);
+			HandOfCards currentHand = null;
+			try {
+				currentHand = (HandOfCards) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			if (currentHand.getGameValue() >= OPENING_HAND  ){
 				openingHand = true;
 				//twitter.appendToCompoundTweet("Player "+ players.get(i).playerName + " says I can open!\n");
-				UI.printout("Player "+ players.get(i).playerName + " says I can open!\n");
+				//UI.printout("Player "+ players.get(i).playerName + " says I can open!\n");
+				UI.printout("Player "+ players.get(i).path().name() + " says I can open!\n");
 				break;
 			}
 		}
@@ -262,9 +312,17 @@ public class HandOfPoker {
 		int antesTotal =0;
 		for (int i=0; i<players.size(); i++){
 			antesTotal += ante; 
-			players.get(i).subtractChips(ante);
+
+			//players.get(i).subtractChips(ante);
+			players.get(i).tell("subtract chips:"+ante, dealer);
+
+
+
 			//twitter.appendToCompoundTweet(players.get(i).playerName + " paid " + ante + " chips for deal.");
-			UI.printout(players.get(i).playerName + " paid " + ante + " chips for deal.");
+
+			//UI.printout(players.get(i).playerName + " paid " + ante + " chips for deal.");
+			UI.printout(players.get(i).path().name() + " paid " + ante + " chips for deal.");
+
 		}
 		return antesTotal;
 	}
@@ -282,17 +340,17 @@ public class HandOfPoker {
 		UI.printout("## Place your bets!\n");
 		showBanks();
 		highBet = 0;
-		HashMap<PokerPlayer, Boolean> foldStatus = new HashMap<PokerPlayer, Boolean>();
+		HashMap<ActorRef, Boolean> foldStatus = new HashMap<>();
 		for(int i=0;i<players.size();i++){
 			foldStatus.put(players.get(i), false);
 		}
 
 		int firstRaiserIndex = -1;
-		PokerPlayer lastRaiser = null;
+		ActorRef lastRaiser = null;
 
 		//ArrayList<Integer> betRecord = new ArrayList<Integer>(); // list for keeping track of bets,bet record[i] will represent player[i]'s bet
 
-		ArrayList<PokerPlayer> playersNotFolded = new ArrayList<PokerPlayer>();
+		ArrayList<ActorRef> playersNotFolded = new ArrayList<>();
 
 
 
@@ -307,12 +365,40 @@ public class HandOfPoker {
 			testPrint("player "  + i);
 			int bet =0;
 
+			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+			Future<Object> future = Patterns.ask(players.get(i), "are you human?", timeout);
+			boolean isHuman = false;
+			try {
+				isHuman = (Boolean) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			System.out.println(players.get(i).path().name() +" human? => "+isHuman);
+
 			// Take opening bets 
-			if (players.get(i).equals(human)){
-				bet = human.openingBet();
+			if (isHuman){
+				//bet = human.openingBet();
+				timeout = new Timeout(Duration.create(30, "seconds"));
+				future = Patterns.ask(human, "get opening bet", timeout);
+
+				try {
+					bet = (Integer) Await.result(future, timeout.duration());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			else {
-				bet = players.get(i).getBet();
+				 timeout = new Timeout(Duration.create(5, "seconds"));
+				 future = Patterns.ask(players.get(i), "get bet", timeout);
+
+				try {
+					bet = (Integer) Await.result(future, timeout.duration());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				//bet = players.get(i).getBet();
 			}
 
 			testPrint("bet =" + bet);
@@ -326,13 +412,17 @@ public class HandOfPoker {
 				testPrint("firstRaiserIndex = " + firstRaiserIndex);
 				//twitter.appendToCompoundTweet(players.get(i).playerName + " makes the first bet of " + bet + " chips.");
 				//twitter.postCompoundTweet();
-				UI.printout(players.get(i).playerName + " makes the first bet of " + bet + " chips.");
+
+				UI.printout(players.get(i).path().name() + " makes the first bet of " + bet + " chips.");
+			//	UI.printout(players.get(i).playerName + " makes the first bet of " + bet + " chips.");
 			}
 			else {
 				testPrint("bet !> 0. continue 1st loop");
 				//twitter.appendToCompoundTweet(players.get(i).playerName + " checks.");
 				//twitter.postCompoundTweet();
-				UI.printout(players.get(i).playerName + " checks.");
+
+				UI.printout(players.get(i).path().name() + " checks.");
+				//UI.printout(players.get(i).playerName + " checks.");
 			}
 			playersNotFolded.add(players.get(i));
 			foldStatus.put(players.get(i), false);
@@ -360,7 +450,18 @@ public class HandOfPoker {
 
 			testPrint("player " + i);
 
-			int bet = players.get(i).getBet();
+			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+			Future<Object> future = Patterns.ask(players.get(i), "get bet", timeout);
+			int bet =0;
+
+			try {
+				bet = (Integer) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			//int bet = players.get(i).getBet();
+
 			testPrint("bet = " + bet);
 			boolean raiseMessage = false;
 
@@ -388,10 +489,12 @@ public class HandOfPoker {
 					//twitter.appendToCompoundTweet(players.get(i).playerName + " sees the bet of " + highBet + " chips.");
 					//twitter.postCompoundTweet();
 					if (raiseMessage) {
-						UI.printout(players.get(i).playerName + " raises the bet to " + highBet + " chips.");
+						//UI.printout(players.get(i).playerName + " raises the bet to " + highBet + " chips.");
+						UI.printout(players.get(i).path().name() + " raises the bet to " + highBet + " chips.");
 					}
 					else {
-						UI.printout(players.get(i).playerName + " sees the bet of " + highBet + " chips.");
+						//UI.printout(players.get(i).playerName + " sees the bet of " + highBet + " chips.");
+						UI.printout(players.get(i).path().name() + " sees the bet of " + highBet + " chips.");
 					}
 				}
 				else {
@@ -401,8 +504,15 @@ public class HandOfPoker {
 					//players.get(i).subtractChips(bet - betRecord.get(i));
 					//twitter.appendToCompoundTweet(players.get(i).playerName + " sees the bet of " + highBet 
 					//		+ " and throws in the additional " + (bet - betRecord.get(i)) + " chips.\n");
-					UI.printout(players.get(i).playerName + " sees the bet of " + highBet 
+
+
+				//	UI.printout(players.get(i).playerName + " sees the bet of " + highBet
+				//			+ " and throws in the additional " + (bet - betRecordz.get(players.get(i))/*betRecord.get(i)*/) + " chips.\n");
+					UI.printout(players.get(i).path().name() + " sees the bet of " + highBet
 							+ " and throws in the additional " + (bet - betRecordz.get(players.get(i))/*betRecord.get(i)*/) + " chips.\n");
+
+
+
 					//betRecord.set(i, bet);
 					betRecordz.replace(players.get(i), bet);
 					//twitter.postCompoundTweet();
@@ -421,7 +531,12 @@ public class HandOfPoker {
 				}
 				//twitter.appendToCompoundTweet(players.get(i).playerName + " folds.");
 				//twitter.postCompoundTweet();
-				UI.printout(players.get(i).playerName + " folds.");
+
+				//UI.printout(players.get(i).playerName + " folds.");
+				UI.printout(players.get(i).path().name() + " folds.");
+
+
+
 				playersNotFolded.remove(players.get(i));
 				betRecordz.remove(players.get(i));
 				foldStatus.put(players.get(i), true);
@@ -443,7 +558,7 @@ public class HandOfPoker {
 		// Call the bets back around to the last raiser if there are still enough players not folded
 		//players.clear();
 		//players.addAll(playersNotFolded);
-		ArrayList<PokerPlayer> proceed = new ArrayList<PokerPlayer>();
+		ArrayList<ActorRef> proceed = new ArrayList<>();
 		for(int i =0;i<players.size();i++){
 			if(foldStatus.get(players.get(i))==false){
 				proceed.add((players.get(i)));
@@ -469,14 +584,40 @@ public class HandOfPoker {
 			foldStatus.clear();
 			for (int i = (lastRaiserIndex+1)%players.size(); i != lastRaiserIndex; i = (i+1)%players.size()){
 				//UI.printout("Player " + i);
-				if (!players.get(i).hasMatchedHighBet()){
-					int bet = players.get(i).getCall();
+				Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+				Future<Object> future = Patterns.ask(players.get(i), "has matched high bet", timeout);
+				boolean hasMatchedHighBet = false;
+				try {
+					hasMatchedHighBet = (Boolean) Await.result(future, timeout.duration());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+
+				//if (!players.get(i).hasMatchedHighBet()){
+				if (!hasMatchedHighBet){
+					timeout = new Timeout(Duration.create(30, "seconds"));
+					System.out.println("getting call from "+players.get(i).path().name());
+					future = Patterns.ask(players.get(i), "get call", timeout);
+					int bet = 0;
+					try {
+						bet = (Integer) Await.result(future, timeout.duration());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+
+				//	int bet = players.get(i).getCall();
+
 					//UI.printout(players.get(i).playerName + " bets " + bet + " & high bet = " + this.highBet);
 
 					testPrint("bet = " + bet);
 					if (bet != 0){
 						testPrint("bet != 0");
-						UI.printout("Adding "+players.get(i).playerName + " to the playersnotfolded");
+
+						UI.printout("Adding "+players.get(i).path().name() + " to the playersnotfolded");
+					//	UI.printout("Adding "+players.get(i).playerName + " to the playersnotfolded");
+
 						playersNotFolded.add(players.get(i));
 						foldStatus.put(players.get(i), false);
 						//pot += highBet - betRecord.get(i);
@@ -485,12 +626,19 @@ public class HandOfPoker {
 						//twitter.appendToCompoundTweet(players.get(i).playerName + " sees the bet of " + highBet 
 						//		+ " and throws in the additional " + (bet - betRecord.get(i)) + " chips.\n");
 						//twitter.postCompoundTweet();
-						UI.printout(players.get(i).playerName + " sees the bet of " + highBet 
+
+						UI.printout(players.get(i).path().name() + " sees the bet of " + highBet
 								+ " and throws in the additional " + (bet - betRecordz.get(players.get(i))/*betRecord.get(i)*/) + " chips.\n");
+						//UI.printout(players.get(i).playerName + " sees the bet of " + highBet
+						//		+ " and throws in the additional " + (bet - betRecordz.get(players.get(i))/*betRecord.get(i)*/) + " chips.\n");
 					}
 					else {
-						testPrint("bet = 0 so folds");						
-						UI.printout(players.get(i).playerName + " folds.");
+						testPrint("bet = 0 so folds");
+
+						UI.printout(players.get(i).path().name() + " folds.");
+						//UI.printout(players.get(i).playerName + " folds.");
+
+
 						//betRecord.remove(i);
 						betRecordz.remove(players.get(i));
 						//players.remove(i);
@@ -505,7 +653,7 @@ public class HandOfPoker {
 				else {
 					testPrint("player " + i + "already matched bet");
 				}
-				for (PokerPlayer name: betRecordz.keySet()){
+				for (ActorRef name: betRecordz.keySet()){
 
 					String key =name.toString();
 					String value = betRecordz.get(name).toString();  
@@ -519,13 +667,15 @@ public class HandOfPoker {
 		else {
 			//twitter.appendToCompoundTweet("Everyone has folded but " + players.get(0).playerName + "!");
 			//twitter.postCompoundTweet();
-			UI.printout("Everyone has folded but " + players.get(0).playerName + "!");
+
+			UI.printout("Everyone has folded but " + players.get(0).path().name() + "!");
+			//UI.printout("Everyone has folded but " + players.get(0).playerName + "!");
 		}
 
 		//players.clear();
 		//players.addAll(playersNotFolded);
 
-		ArrayList<PokerPlayer> tempo = new ArrayList<PokerPlayer>();
+		ArrayList<ActorRef> tempo = new ArrayList<>();
 		for(int i = 0;i<players.size();i++){
 			if(foldStatus.containsKey(players.get(i))){
 				if(foldStatus.get(players.get(i))==false){
@@ -539,16 +689,36 @@ public class HandOfPoker {
 
 
 		testShowBanks();
-		human.currentBet =0;
+
+		//human.currentBet =0;
+		human.tell("reset current bet", dealer);
+
+
 		for (int i=0; i<players.size(); i++){
-			players.get(i).roundOverallBet = 0;
+			//players.get(i).roundOverallBet = 0;
+			players.get(i).tell("round overall bet",dealer);
 		}
 	}
 
 	private void showBanks() {
 		for (int i=0; i< players.size(); i++){
 			//twitter.appendToCompoundTweet(players.get(i).playerName + " has " + players.get(i).playerPot + " chips");
-			UI.printout(players.get(i).playerName + " has " + players.get(i).playerPot + " chips");
+
+			//UI.printout(players.get(i).playerName + " has " + players.get(i).playerPot + " chips");
+
+			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+			Future<Object> future = Patterns.ask(players.get(i), "get pot", timeout);
+			int pot = 0;
+			try {
+				pot = (int) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			UI.printout(players.get(i).path().name() + " has " + pot + " chips");
+
+
+
 		}
 		//twitter.postCompoundTweet();
 	}
@@ -563,10 +733,37 @@ public class HandOfPoker {
 		//human.discard();
 		//players.set(0, human);
 		for (int i=0; i<players.size(); i++){
-			players.get(i).hand.passPlayerType(players.get(i));
-			int discardedCount = players.get(i).discard();
+			//players.get(i).hand.passPlayerType(players.get(i));
+			System.out.println(i);
+
+			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+			Future<Object> future = Patterns.ask(players.get(i), "get hand", timeout);
+			HandOfCards hand = null;
+			try {
+				hand = (HandOfCards) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			hand.passPlayerType(players.get(i));
+
+			timeout = new Timeout(Duration.create(60, "seconds"));
+			future = Patterns.ask(players.get(i), "discard", timeout);
+			int discardedCount = 0;
+			try {
+				discardedCount = (Integer) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			//int discardedCount = players.get(i).discard();
+
+
+
 			//twitter.appendToCompoundTweet(players.get(i).playerName + " discards " + discardedCount + "cards");
-			UI.printout(players.get(i).playerName + " discards " + discardedCount + "cards");
+
+			UI.printout(players.get(i).path().name() + " discards " + discardedCount + "cards");
+			//UI.printout(players.get(i).playerName + " discards " + discardedCount + "cards");
 		}
 		//twitter.appendToCompoundTweet("\n\n## Players are redealt their cards.");
 		UI.printout("\n\n## Players are redealt their cards.");
@@ -578,12 +775,17 @@ public class HandOfPoker {
 	 */
 	private void showCards() {
 		fillPlayers();
-		PokerPlayer handWinner = getHandWinner();
+		ActorRef handWinner = getHandWinner();
 
 		for (int i=0; i<players.size(); i++){
 			//twitter.appendToCompoundTweet(players.get(i).playerName + " says ");
-			UI.printout(players.get(i).playerName + " says ");
-			players.get(i).showCards(handWinner);
+			//UI.printout(players.get(i).playerName + " says ");
+			UI.printout(players.get(i).path().name() + " says ");
+
+
+
+			players.get(i).tell("show cards:"+handWinner.path().toString(), dealer);
+			//players.get(i).showCards(handWinner);
 		}
 	}
 
@@ -591,12 +793,30 @@ public class HandOfPoker {
 	 * Determines the winner of this hand of poker.
 	 * @return
 	 */
-	private PokerPlayer getHandWinner(){
+	private ActorRef getHandWinner(){
 		fillPlayers();
-		PokerPlayer winningPlayer = players.get(0);
+		ActorRef winningPlayer = players.get(0);
+		Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+		Future<Object> future = Patterns.ask(winningPlayer, "get hand", timeout);
+		HandOfCards winnersHand = null;
+		try {
+			winnersHand = (HandOfCards) Await.result(future, timeout.duration());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		for(int i=1; i<players.size(); i++){
-			if(players.get(i).hand.getGameValue()>winningPlayer.hand.getGameValue()){
+			System.out.println(i);
+
+			future = Patterns.ask(players.get(i), "get hand", timeout);
+			HandOfCards currentHand = null;
+			try {
+				currentHand = (HandOfCards) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			if(currentHand.getGameValue()>winnersHand.getGameValue()){
 				winningPlayer = players.get(i);
 			}
 		}
@@ -607,14 +827,14 @@ public class HandOfPoker {
 	 * Calculates who has the highest scoring hand in the group
 	 * @return an arrayList containing the winner or tied winners in a very rare case
 	 */
-	private ArrayList<PokerPlayer> calculateWinners() {
-		ArrayList<PokerPlayer> winnersCircle = new ArrayList<PokerPlayer>();
+	private ArrayList<ActorRef> calculateWinners() {
+		ArrayList<ActorRef> winnersCircle = new ArrayList<>();
 
 
-		HashMap.Entry<PokerPlayer,Integer> entry=betRecordz.entrySet().iterator().next();
-		PokerPlayer key= entry.getKey();
+		HashMap.Entry<ActorRef,Integer> entry=betRecordz.entrySet().iterator().next();
+		ActorRef key= entry.getKey();
 		Integer value=entry.getValue();
-		PokerPlayer winner = key;
+		ActorRef winner = key;
 
 		// Look for highest scoring hand
 		/*for (int i=1; i<players.size(); i++){
@@ -623,9 +843,31 @@ public class HandOfPoker {
 			}
 		}*/
 
-		for (PokerPlayer name: betRecordz.keySet()){
+		Timeout timeout = new Timeout(Duration.create(5, "seconds"));
 
-			if(name.hand.getGameValue()>winner.hand.getGameValue()){
+
+		Future<Object> future = Patterns.ask(winner, "get hand", timeout);
+		HandOfCards winnersHand = null;
+		try {
+			winnersHand = (HandOfCards) Await.result(future, timeout.duration());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		for (ActorRef name: betRecordz.keySet()){
+			timeout = new Timeout(Duration.create(5, "seconds"));
+			System.out.println(name);
+
+			future = Patterns.ask(name, "get hand", timeout);
+			HandOfCards currentHand = null;
+			try {
+				currentHand = (HandOfCards) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			//if(name.hand.getGameValue()>winner.hand.getGameValue()){
+			if(currentHand.getGameValue()>winnersHand.getGameValue()){
+
 				winner = name;
 			}
 
@@ -633,13 +875,27 @@ public class HandOfPoker {
 
 		// Store winner
 		winnersCircle.add(winner);
-		UI.printout("winner is "+winner.playerName);
+
+
+		//UI.printout("winner is "+winner.playerName);
+		UI.printout("winner is "+winner.path().name());
+
 
 		players.remove(winner);
 
 		// Check for very rare occurrence of a draw for a split pot
 		for (int i=0; i<players.size(); i++){
-			if (players.get(i).hand.getGameValue() == winner.hand.getGameValue()){
+			System.out.println();
+			timeout = new Timeout(Duration.create(5, "seconds"));
+			future = Patterns.ask(players.get(i), "get hand", timeout);
+			HandOfCards currentHand = null;
+			try {
+				currentHand = (HandOfCards) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			if (currentHand.getGameValue() == winnersHand.getGameValue()){
 				winnersCircle.add(players.get(i));
 			}
 		}
@@ -652,7 +908,7 @@ public class HandOfPoker {
 	 * TODO Implement when split pot betting occurs
 	 * @param winners
 	 */
-	private void awardWinner(ArrayList<PokerPlayer> winners)  { 
+	private void awardWinner(ArrayList<ActorRef> winners)  {
 
 		if (winners.size() == 1){
 			//twitter.postCompoundTweet(); //Make sure compound tweet is clear
@@ -663,12 +919,27 @@ public class HandOfPoker {
 			//twitter.postCompoundTweet();
 
 			UI.printout("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			UI.printout(winners.get(0).playerName + " wins with a " + winners.get(0).getHandType());
-			UI.printout("## " + winners.get(0).playerName + " gets " + pot/winners.size() + " chips. ##\n");
+			//UI.printout(winners.get(0).playerName + " wins with a " + winners.get(0).getHandType());
+		//	UI.printout("## " + winners.get(0).playerName + " gets " + pot/winners.size() + " chips. ##\n");
+
+			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+			Future<Object> future = Patterns.ask(winners.get(0), "get hand type", timeout);
+			String result = "null";
+			try {
+				result = (String) Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			UI.printout(winners.get(0).path().name() + " wins with a " + result);
+			UI.printout("## " + winners.get(0).path().name() + " gets " + pot/winners.size() + " chips. ##\n");
+
 			UI.printout("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
 
-			winners.get(0).awardChips(pot);
+			//winners.get(0).awardChips(pot);
+			winners.get(0).tell("award chips:"+pot, dealer);
+
+
 			pot = 0;
 		}
 
@@ -676,13 +947,28 @@ public class HandOfPoker {
 
 			for (int i=0; i<winners.size(); i++){
 				//twitter.appendToCompoundTweet(winners.get(0).playerName + " ties with a " + winners.get(0).getHandType());
-				UI.printout(winners.get(0).playerName + " ties with a " + winners.get(0).getHandType());
+				//UI.printout(winners.get(0).playerName + " ties with a " + winners.get(0).getHandType());
+				Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+				Future<Object> future = Patterns.ask(winners.get(0), "get hand type", timeout);
+				String result = "null";
+				try {
+					result = (String) Await.result(future, timeout.duration());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				UI.printout(winners.get(0).path().name() + " ties with a " + result);
+
 			}
 
 			for (int i=0; i< winners.size(); i++){
-				winners.get(i).awardChips(pot/winners.size());
+				//winners.get(i).awardChips(pot/winners.size());
+				winners.get(0).tell("award chips:"+pot/winners.size(), dealer);
+
 				//twitter.appendToCompoundTweet("## " + winners.get(0).playerName + " gets " + pot/winners.size() + " chips. ##\n");
-				UI.printout("## " + winners.get(0).playerName + " gets " + pot/winners.size() + " chips. ##\n");
+				//UI.printout("## " + winners.get(0).playerName + " gets " + pot/winners.size() + " chips. ##\n");
+				UI.printout("## " + winners.get(0).path().name() + " gets " + pot/winners.size() + " chips. ##\n");
+
 
 			}
 		}
@@ -742,8 +1028,8 @@ public class HandOfPoker {
 	}
 
 	public void fillPlayers(){
-		ArrayList<PokerPlayer> temp = new ArrayList<PokerPlayer>();
-		for (PokerPlayer name: betRecordz.keySet()){
+		ArrayList<ActorRef> temp = new ArrayList<ActorRef>();
+		for (ActorRef name: betRecordz.keySet()){
 			temp.add(name);
 		} 
 		players.clear();
