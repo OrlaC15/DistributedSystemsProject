@@ -258,9 +258,9 @@ public class HandOfPoker {
 			//twitter.appendToCompoundTweet("Dealing hands...");
 			UI.printout("Dealing hands... to "+players.size());
 			UI.printout("Dealing"+players.size());
-
+            UI.printout("Dealing cards.....");
 			for (int i=0; i<players.size(); i++){
-				UI.printout("Dealing");
+
 				ActorRef currentRef = players.get(i);
 				System.out.println("current ref "+currentRef);
 				currentRef.tell("deal new hand", dealer);
@@ -321,9 +321,10 @@ public class HandOfPoker {
 			//twitter.appendToCompoundTweet(players.get(i).playerName + " paid " + ante + " chips for deal.");
 
 			//UI.printout(players.get(i).playerName + " paid " + ante + " chips for deal.");
-			UI.printout(players.get(i).path().name() + " paid " + ante + " chips for deal.");
 
 		}
+		UI.printout("All players have paid the ante of  " + ante + " chips for deal.");
+
 		return antesTotal;
 	}
 

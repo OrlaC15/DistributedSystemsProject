@@ -15,7 +15,8 @@ public class PlayerClient {
         boolean gotPlayerName = false;
         String playerName = "";
 
-        System.out.print("Welcome to Poker! Please enter your name: ");
+        System.out.print("Welcome to Poker! To fully enjoy the game please expand your terminal window!" +
+                " Please enter your name: ");
 
         //get players name from console
         while (!gotPlayerName) {

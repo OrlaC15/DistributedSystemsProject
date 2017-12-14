@@ -69,7 +69,7 @@ public class GameOfPoker implements Runnable{
 		//humanPlayer = new HumanPokerPlayer(deck,dealer,player,a);
 		 humanPlayer = gameSystem.actorOf(Props.create(HumanPokerPlayer.class, deck, dealer, player, a), "Human");
 		players.add(humanPlayer);
-		for(int i=0;i<5;i++){
+		for(int i=0;i<2;i++){
 			ActorRef computerPlayer = gameSystem.actorOf(Props.create(AutomatedPokerPlayer.class, deck, a), "Comp"+(i+1));
 			//PokerPlayer computerPlayer = new AutomatedPokerPlayer(deck, a);
 

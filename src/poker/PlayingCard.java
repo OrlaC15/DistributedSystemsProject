@@ -16,10 +16,7 @@ public class PlayingCard {
 	static public final int[] FACE_VALUES = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 	static public final int[] GAME_VALUES = {14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 	
-	/**
-	 * Constant for how many unique cards there are in a standard pack
-	 * @see #PlayingCard(int)
-	 */
+
 	static public final int UNIQUE_CARD_COUNT = 52;
 	
 	//Private internal fields
@@ -73,7 +70,7 @@ public class PlayingCard {
 	 * eg. 10S = 10 of Spades, AD = Ace of Diamonds
 	 */
 	public String toString (){
-		return type + suit;
+		return" -[" + type + suit + "]-";
 	}
 	
 	/*
