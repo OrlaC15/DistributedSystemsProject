@@ -17,8 +17,7 @@ import java.util.ArrayList;
 public class GameOfPoker implements Runnable{
 	public  static PrintStream defaultPrintStream = System.out;
 	public String playerName = "";
-	private DeckOfCards deck;
-	public ActorRef humanPlayer;
+	public ActorRef humanPlayer, deck;
 	//private TwitterInteraction twitter;
 	ArrayList<ActorRef> players = new ArrayList<ActorRef>(6);
 	boolean playerWin = false;
@@ -60,7 +59,7 @@ public class GameOfPoker implements Runnable{
 	int ante = 1;
 	ActorSystem gameSystem;
 
-	public GameOfPoker(ActorRef dealer, ActorRef player, DeckOfCards deck, ActorSystem gameSystem) throws InterruptedException {
+	public GameOfPoker(ActorRef dealer, ActorRef player, ActorRef deck, ActorSystem gameSystem) throws InterruptedException {
 		this.player = player;
 		this.dealer = dealer;
 		playerName = player.path().name();
@@ -158,7 +157,7 @@ public class GameOfPoker implements Runnable{
 				TwitterStreamer.usersPlayingGames.remove(playerName);
 				TwitterStreamer.gamesOfPoker.remove(playerName);
 			}*/
-		}  catch (IOException e) {
+		}  catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

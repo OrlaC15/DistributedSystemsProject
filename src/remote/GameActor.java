@@ -37,7 +37,9 @@ public class GameActor extends UntypedActor {
                 ActorSystem dealerSystem = ActorSystem.create("DealerSystem", createConfig());
                 final ActorRef dealer = dealerSystem.actorOf(Props.create(DealerActor.class, "Dealer"), "Dealer");
                 ActorRef player = getSender();
-                DeckOfCards deck = new DeckOfCards();
+                //DeckOfCards deck = new DeckOfCards();
+
+                ActorRef deck = dealerSystem.actorOf(Props.create(DeckActor.class, new DeckOfCards()));
 
                 OutputTerminal a = new OutputTerminal(dealer,player);
 

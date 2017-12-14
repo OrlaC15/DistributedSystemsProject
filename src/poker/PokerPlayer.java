@@ -1,12 +1,13 @@
 package poker;
 
+import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 
 import java.io.IOException;
 
 
 public abstract class PokerPlayer extends UntypedActor {
-	private DeckOfCards deck;
+	private ActorRef deck;
 	protected HandOfPoker currentRound;
 	protected HandOfCards hand;
 	public int playerPot;
@@ -17,13 +18,12 @@ public abstract class PokerPlayer extends UntypedActor {
 	
 	public int lowestPotBetLimit =Integer.MAX_VALUE;
 	public String lowestPotPlayerName ="";
-	
-	public PokerPlayer(DeckOfCards inputDeck) throws InterruptedException {
+
+	public PokerPlayer(ActorRef inputDeck) throws InterruptedException {
 		deck = inputDeck;
 		hand = new HandOfCards(deck);
 		playerPot = GameOfPoker.PLAYER_POT_DEFAULT;
 	}
-
 
 
 

@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Random;
 
 public class HumanPokerPlayer extends PokerPlayer implements Runnable {
-	private DeckOfCards a;
+	private ActorRef a;
 	public PictureOfHand pic;
 
 	/*
@@ -28,7 +28,7 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 	ActorRef dealer;
 	OutputTerminal output;
 
-	public HumanPokerPlayer(DeckOfCards inputDeck, ActorRef dealer, ActorRef player, OutputTerminal UI) throws InterruptedException {
+	public HumanPokerPlayer(ActorRef inputDeck, ActorRef dealer, ActorRef player, OutputTerminal UI) throws InterruptedException {
 		super(inputDeck);
 		this.playerName = player.path().name();
 		a= inputDeck;
@@ -160,7 +160,7 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 		int amountToDiscard = 0;
 
 		//twitter.updateStatusWithTextAndImage("Here are your cards! do you want to replace any!?\n If so tweet 'Y' for yes or 'N' for no", pic.createImage(this.hand)  );
-		output.printout("Here are your cards! do you want to replace any!?\n If so tweet 'Y' for yes or 'N' for no\n"+hand.toString());
+		output.printout("Here are your cards! do you want to replace any!?\n If so, reply 'Y' for yes or 'N' for no\n"+hand.toString());
 		//String Answer = twitter.waitForTweet();
 		String Answer = output.readInString();
 
@@ -504,7 +504,7 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 
 		human.Fold();
 	}*/
-
+	/*
 	public static void main(String[] args) throws InterruptedException,   IOException {
 
 		DeckOfCards deck = new DeckOfCards();
@@ -518,7 +518,7 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 
 		human.Fold();
 
-	}
+	}*/
 
 	@Override
 	public void run() {

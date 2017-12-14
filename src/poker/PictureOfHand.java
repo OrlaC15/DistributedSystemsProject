@@ -66,21 +66,5 @@ public class PictureOfHand {
 		
 	
 	}
-	
-	public static void main(String[] args) throws IOException{
-		
-		DeckOfCards deck = new DeckOfCards();
-		HandOfCards hand = null;
-		try {
-			hand = new HandOfCards(deck);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		PictureOfHand pic = new PictureOfHand();
-		
-		pic.createImage(hand);
-		System.out.println(hand);
-	
-	}
+
 }
