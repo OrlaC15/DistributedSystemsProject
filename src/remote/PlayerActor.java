@@ -11,7 +11,6 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import poker.DeckOfCards;
 import poker.HumanPokerPlayer;
 import poker.PokerPlayer;
 

@@ -4,7 +4,7 @@ import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
-import com.sun.org.apache.bcel.internal.generic.ACONST_NULL;
+//import com.sun.org.apache.bcel.internal.generic.ACONST_NULL;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -30,7 +30,7 @@ public class HandOfPoker {
 
 
 	OutputTerminal UI;
-	DeckOfCards deck;
+	ActorRef deck;
 	ActorRef human;
 
 	PrintWriter writer;
@@ -41,7 +41,7 @@ public class HandOfPoker {
 	ActorRef dealer;
 
 	
-	public HandOfPoker(ArrayList<ActorRef> players, int ante, DeckOfCards deck, OutputTerminal UI, ActorRef player, ActorRef dealer) throws IOException{
+	public HandOfPoker(ArrayList<ActorRef> players, int ante, ActorRef deck, OutputTerminal UI, ActorRef player, ActorRef dealer) throws IOException{
 		this.players = new ArrayList<ActorRef>();
 		this.dealer = dealer;
 		this.players.addAll(players);
@@ -251,16 +251,16 @@ public class HandOfPoker {
 			System.out.println("got into dealhandsuntilopen");
 			System.out.println("checking if null");
 			System.out.println(deck==null);
-			deck.shuffle();
+			deck.tell("Shuffle", dealer);
 			System.out.println("deck was shuffled");
-			deck.reset();
+			deck.tell("Reset", dealer);
 			System.out.println("deck was reset");
 			//twitter.appendToCompoundTweet("Dealing hands...");
 			UI.printout("Dealing hands... to "+players.size());
 			UI.printout("Dealing"+players.size());
-
+            UI.printout("Dealing cards.....");
 			for (int i=0; i<players.size(); i++){
-				UI.printout("Dealing");
+
 				ActorRef currentRef = players.get(i);
 				System.out.println("current ref "+currentRef);
 				currentRef.tell("deal new hand", dealer);
@@ -321,9 +321,10 @@ public class HandOfPoker {
 			//twitter.appendToCompoundTweet(players.get(i).playerName + " paid " + ante + " chips for deal.");
 
 			//UI.printout(players.get(i).playerName + " paid " + ante + " chips for deal.");
-			UI.printout(players.get(i).path().name() + " paid " + ante + " chips for deal.");
 
 		}
+		UI.printout("All players have paid the ante of  " + ante + " chips for deal.");
+
 		return antesTotal;
 	}
 
@@ -985,7 +986,7 @@ public class HandOfPoker {
 
 	/*
 	 * Initialises and plays two separate instances of a hand of poker 
-	 */
+	 *
 	public static void main(String[] args) throws InterruptedException {
 		DeckOfCards deck = new DeckOfCards();
 		OutputTerminal console = new OutputTerminal(null,null);
@@ -1017,8 +1018,8 @@ public class HandOfPoker {
 				);
 
 		// Second hand
-		console.printout("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~-----------~~~~~~~~~~~~~~~~~~~~~~~~~~~");*/
-	}
+		console.printout("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~-----------~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+	}*/
 
 	public int getPot(){
 		return pot;

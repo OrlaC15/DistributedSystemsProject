@@ -38,7 +38,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 		twitter = t;
 	}*/
 	
-	public AutomatedPokerPlayer(DeckOfCards inputDeck, OutputTerminal UI) throws InterruptedException {
+	public AutomatedPokerPlayer(ActorRef inputDeck, OutputTerminal UI) throws InterruptedException {
 		super(inputDeck);
 		playerName = getPlayerName(FILE_OF_NAMES);
 		playerType = randomPokerPlayerType();
@@ -409,64 +409,6 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 		output.printout("This is coming from AutomatedPokerPlayer Class");
 	}
 
-	public static void main(String[] args) throws InterruptedException{
-
-		DeckOfCards deck = new DeckOfCards();
-		//TwitterInteraction t = new TwitterInteraction(TwitterStreamer.twitter);
-		OutputTerminal t = new OutputTerminal(null,null);
-		//ArrayList<AutomatedPokerPlayer> players = new ArrayList<AutomatedPokerPlayer>();
-		AutomatedPokerPlayer playerOne = new AutomatedPokerPlayer(deck, t);
-		AutomatedPokerPlayer playerTwo = new AutomatedPokerPlayer(deck, t);
-		AutomatedPokerPlayer playerThree = new AutomatedPokerPlayer(deck, t);
-		AutomatedPokerPlayer playerFour = new AutomatedPokerPlayer(deck, t);
-
-		System.out.println("name: " + playerOne.playerName + " type: " + playerOne.playerType);
-		System.out.println("name: " + playerTwo.playerName + " type: " + playerOne.playerType);
-		System.out.println("name: " + playerThree.playerName + " type: " + playerOne.playerType);
-		System.out.println("name: " + playerFour.playerName + " type: " + playerOne.playerType);
-		
-
-		
-		//players.add(playerOne);
-		//players.add(playerTwo);
-		//players.add(playerThree);
-		//players.add(playerFour);
-		
-				/*//Had to comment this out to change static variables to dynamic in hand
-		for(int i=0; i<3; i++){
-			for(AutomatedPokerPlayer p : players){
-				out.printout(p.playerName);
-				int temp = p.getBet();
-				if(temp > HandOfPoker.highBet){
-					HandOfPoker.highBet = temp;
-				}
-			}
-		}
-
-
-
-		HandOfPoker.highBet = 0;*/
-
-		/*
-		 * Tests betting against high bet values for a number
-		 * of random hands for every player type.
-
-		for(int j=0; j<10; j++){
-
-			playerOne.dealNewHand();
-			deck.reset();
-			deck.shuffle();
-			out.printout("\n\nTESTING AGAINST A HIGH BET OF: " + HandOfPoker.highBet + "\n" + playerOne.hand + " - HAND VALUE = " + playerOne.hand.getGameValue());	
-
-			for(int i=1; i<6; i++){
-				playerOne.playerType = i;
-				out.printout("Player Type = " + playerOne.playerType + ", therefore bet value = " + playerOne.getBet() + "\n");
-			}
-
-			HandOfPoker.highBet+=2;
-		}
-		 */
-	}
 
 	@Override
 	public boolean isHuman() {
