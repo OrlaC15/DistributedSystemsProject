@@ -7,6 +7,8 @@ import akka.actor.UntypedActor;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,11 +23,20 @@ public class HelloWorldServerActor extends UntypedActor {
     }
 
     static Config createConfig() {
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        System.out.println("IP Address:- " + inetAddress.getHostAddress());
+        System.out.println("Host Name:- " + inetAddress.getHostName());
         Map<String, Object> map = new HashMap<>();
         map.put("akka.actor.provider",   "akka.remote.RemoteActorRefProvider");
         map.put("akka.remote.transport", "akka.remote.netty.NettyRemoteTransport");
-        map.put("akka.remote.netty.tcp.hostname", "127.0.0.1");
+        map.put("akka.remote.netty.tcp.hostname", inetAddress.getHostAddress());
         map.put("akka.remote.netty.tcp.port", "2600");
+       // map.put("akka.cluster.")
         return ConfigFactory.parseMap(map);
     }
 

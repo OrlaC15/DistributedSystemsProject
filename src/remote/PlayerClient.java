@@ -6,6 +6,7 @@ import akka.actor.Props;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -31,13 +32,27 @@ public class PlayerClient {
         }
 
         System.out.println("Welcome to the game, "+playerName+". We hope you have fun!");
+        System.out.println("We're looking for a game for you to join.");
+
+        int port = 2107;
+        MulticastReceiver n = null;
+        String ipAddress = "";
+        try {
+            n = new MulticastReceiver();
+            ipAddress = n.run();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("We found a game server at "+ipAddress+", starting a new game.");
+
 
         //Create actor for player
         ActorSystem playerSystem = ActorSystem.create("PlayerSystem", createConfig());
         final ActorRef me = playerSystem.actorOf(Props.create(PlayerActor.class, playerName), playerName);
 
         //Get dealer actor, we have to tell it we want to start a new game.
-        final String path = "akka.tcp://GameSystem@127.0.0.1:2600/user/Game";
+        final String path = "akka.tcp://GameSystem@"+ipAddress+":2600/user/Game";
         ActorRef dealerActor = playerSystem.actorFor(path);
         dealerActor.tell("Play", me);
 
