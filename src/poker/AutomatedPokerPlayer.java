@@ -86,7 +86,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	 * @param quoteNumber
 	 * @return
 	 */
-	public String getPlayerQuote(int quoteNumber){
+	/*public String getPlayerQuote(int quoteNumber){
 		String quote = "";
 		
 		if(quoteNumber == COCKY_RAISE){
@@ -109,8 +109,8 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 		}
 		
 		
-		return quote;
-	}
+		return null;
+	}*/
 
 	/**
 	 * Retrieves a random line from a file.
@@ -311,12 +311,12 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	 */
 	private int see(int betValue){
 		betValue = currentRound.highBet;
-		if(playerType < 4){
+		/*if(playerType < 4){
 			output.printout(getPlayerQuote(CONSERVATIVE_SEE) + "I'll see your " + betValue + " chips.");
 		}
 		else{
 			output.printout(getPlayerQuote(COCKY_SEE) + "I see your " + betValue + " chips.");			
-		}
+		}*/
 		return betValue;
 	}
 
@@ -325,14 +325,14 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	 */
 	private int raise(int betValue){
 		int raiseValue = betValue - currentRound.highBet;
-		
+		/*
 		if(playerType < 4){
 			output.printout(getPlayerQuote(CONSERVATIVE_RAISE) + "I raise " + raiseValue + " chips.");
 		}
 		else{
 			output.printout(getPlayerQuote(COCKY_RAISE) + "I raise " + raiseValue + " chips.");
 		}
-
+*/
 		return betValue;
 	}
 
@@ -342,7 +342,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	private int reRaise(int betValue){
 		int raiseValue = betValue - currentRound.highBet;
 
-		output.printout("I re-raise the betting by " + raiseValue + " chips.");
+		//output.printout("I re-raise the betting by " + raiseValue + " chips.");
 		return betValue;
 	}
 
@@ -351,13 +351,13 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	 */
 	private int fold(int betValue){
 		betValue = 0;
-
+/*
 		if(playerType < 4){
 			output.printout(getPlayerQuote(CONSERVATIVE_FOLD));
 		}
 		else{
 			output.printout(getPlayerQuote(COCKY_FOLD));
-		}
+		}*/
 		return betValue;
 	}
 

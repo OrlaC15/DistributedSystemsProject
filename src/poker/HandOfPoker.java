@@ -268,7 +268,6 @@ public class HandOfPoker {
 			}
 		} while (checkOpen() == false);
 	}
-
 	/**
 	 * Returns true if any of the players has an opening hand.
 	 * Prints prompts when a player opens and when no player can open.
