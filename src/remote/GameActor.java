@@ -8,6 +8,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import poker.*;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,13 +22,26 @@ public class GameActor extends UntypedActor {
 
     public static void main(String[] args) {
         final ActorRef game = gameSystem.actorOf(Props.create(GameActor.class), "Game");
+
+        try {
+            MulticastSender sender = new MulticastSender();
+            sender.startSender();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static Config createConfig() {
+        String address = "0.0.0.0";
+        try {
+            address = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("akka.actor.provider", "akka.remote.RemoteActorRefProvider");
         map.put("akka.remote.transport", "akka.remote.netty.NettyRemoteTransport");
-        map.put("akka.remote.netty.tcp.hostname", "127.0.0.1");
+        map.put("akka.remote.netty.tcp.hostname", address);
         map.put("akka.remote.netty.tcp.port", String.valueOf(port++));
         return ConfigFactory.parseMap(map);
     }
