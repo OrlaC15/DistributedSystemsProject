@@ -12,7 +12,6 @@ import java.util.Random;
 
 public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 	private ActorRef a;
-	public PictureOfHand pic;
 
 
 

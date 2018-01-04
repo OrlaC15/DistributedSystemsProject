@@ -6,7 +6,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 
 
-public class MulticastReceiver  {
+public class  MulticastReceiver  {
 
     private MulticastSocket s;
     private InetAddress group;
