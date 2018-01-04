@@ -62,7 +62,7 @@ public class HandOfCards {
 	}
 
 	private PlayingCard getNextCardFromDeck(){
-		Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+		Timeout timeout = new Timeout(Duration.create(HandOfPoker.TIMEOUT, "seconds"));
 		Future<Object> future = Patterns.ask(deck, "Deal Next", timeout);
 		PlayingCard result = null;
 		try {

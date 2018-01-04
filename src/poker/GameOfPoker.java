@@ -91,7 +91,7 @@ public class GameOfPoker implements Runnable{
 				
 				for(int i=0;i<players.size();i++){
 
-					Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+					Timeout timeout = new Timeout(Duration.create(HandOfPoker.TIMEOUT, "seconds"));
 					Future<Object> future = Patterns.ask(players.get(i), "player pot", timeout);
 					int result = 0;
 					try {
@@ -125,7 +125,7 @@ public class GameOfPoker implements Runnable{
 				players = nextRoundPlayers;
 				
 				if(players.size()==1 && !playerLose){
-					Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+					Timeout timeout = new Timeout(Duration.create(HandOfPoker.TIMEOUT, "seconds"));
 					Future<Object>future = Patterns.ask(players.get(0), "are you human", timeout);
 					boolean isHuman = false;
 					try {

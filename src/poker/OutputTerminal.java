@@ -40,7 +40,7 @@ public class OutputTerminal {
 	public String readInString()  {
 
 		//player.tell("I need your input now.", dealer);
-		Timeout timeout = new Timeout(Duration.create(300, "seconds"));
+		Timeout timeout = new Timeout(Duration.create(HandOfPoker.TIMEOUT, "seconds"));
 		Future<Object> future = Patterns.ask(player, "NeedReply", timeout);
 		String result = "null";
 		try {

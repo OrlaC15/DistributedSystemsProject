@@ -21,6 +21,8 @@ public class HandOfPoker {
 
 	final private static int OPENING_HAND = HandOfCards.ONE_PAIR_DEFAULT;
 	public int highBet = 0;
+	//public static final int TIMEOUT = Integer.MAX_VALUE;
+	public static final int TIMEOUT = 1000000;
 
 	private ArrayList<ActorRef> players;
 	int ante;
@@ -174,7 +176,7 @@ public class HandOfPoker {
 		String lowestPotName = null;
 		for (int i=0; i<players.size(); i++){
 			System.out.println(i);
-			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+			Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			Future<Object> future = Patterns.ask(players.get(i), "get pot", timeout);
 			int pot = 0;
 			try {
@@ -280,7 +282,7 @@ public class HandOfPoker {
 			System.out.println("current ref "+currentRef);
 
 
-			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+			Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			Future<Object> future = Patterns.ask(currentRef, "get hand", timeout);
 			HandOfCards currentHand = null;
 			try {
@@ -365,7 +367,7 @@ public class HandOfPoker {
 			testPrint("player "  + i);
 			int bet =0;
 
-			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+			Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			Future<Object> future = Patterns.ask(players.get(i), "are you human?", timeout);
 			boolean isHuman = false;
 			try {
@@ -379,7 +381,7 @@ public class HandOfPoker {
 			// Take opening bets 
 			if (isHuman){
 				//bet = human.openingBet();
-				timeout = new Timeout(Duration.create(30, "seconds"));
+				timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 				future = Patterns.ask(human, "get opening bet", timeout);
 
 				try {
@@ -389,7 +391,7 @@ public class HandOfPoker {
 				}
 			}
 			else {
-				 timeout = new Timeout(Duration.create(5, "seconds"));
+				 timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 				 future = Patterns.ask(players.get(i), "get bet", timeout);
 
 				try {
@@ -450,7 +452,7 @@ public class HandOfPoker {
 
 			testPrint("player " + i);
 
-			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+			Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			Future<Object> future = Patterns.ask(players.get(i), "get bet", timeout);
 			int bet =0;
 
@@ -584,7 +586,7 @@ public class HandOfPoker {
 			foldStatus.clear();
 			for (int i = (lastRaiserIndex+1)%players.size(); i != lastRaiserIndex; i = (i+1)%players.size()){
 				//UI.printout("Player " + i);
-				Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+				Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 				Future<Object> future = Patterns.ask(players.get(i), "has matched high bet", timeout);
 				boolean hasMatchedHighBet = false;
 				try {
@@ -596,7 +598,7 @@ public class HandOfPoker {
 
 				//if (!players.get(i).hasMatchedHighBet()){
 				if (!hasMatchedHighBet){
-					timeout = new Timeout(Duration.create(30, "seconds"));
+					timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 					System.out.println("getting call from "+players.get(i).path().name());
 					future = Patterns.ask(players.get(i), "get call", timeout);
 					int bet = 0;
@@ -706,7 +708,7 @@ public class HandOfPoker {
 
 			//UI.printout(players.get(i).playerName + " has " + players.get(i).playerPot + " chips");
 
-			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+			Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			Future<Object> future = Patterns.ask(players.get(i), "get pot", timeout);
 			int pot = 0;
 			try {
@@ -736,7 +738,7 @@ public class HandOfPoker {
 			//players.get(i).hand.passPlayerType(players.get(i));
 			System.out.println(i);
 
-			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+			Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			Future<Object> future = Patterns.ask(players.get(i), "get hand", timeout);
 			HandOfCards hand = null;
 			try {
@@ -747,7 +749,7 @@ public class HandOfPoker {
 
 			hand.passPlayerType(players.get(i));
 
-			timeout = new Timeout(Duration.create(60, "seconds"));
+			timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			future = Patterns.ask(players.get(i), "discard", timeout);
 			int discardedCount = 0;
 			try {
@@ -796,7 +798,7 @@ public class HandOfPoker {
 	private ActorRef getHandWinner(){
 		fillPlayers();
 		ActorRef winningPlayer = players.get(0);
-		Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+		Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 		Future<Object> future = Patterns.ask(winningPlayer, "get hand", timeout);
 		HandOfCards winnersHand = null;
 		try {
@@ -843,7 +845,7 @@ public class HandOfPoker {
 			}
 		}*/
 
-		Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+		Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 
 
 		Future<Object> future = Patterns.ask(winner, "get hand", timeout);
@@ -855,7 +857,7 @@ public class HandOfPoker {
 		}
 
 		for (ActorRef name: betRecordz.keySet()){
-			timeout = new Timeout(Duration.create(5, "seconds"));
+			timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			System.out.println(name);
 
 			future = Patterns.ask(name, "get hand", timeout);
@@ -886,7 +888,7 @@ public class HandOfPoker {
 		// Check for very rare occurrence of a draw for a split pot
 		for (int i=0; i<players.size(); i++){
 			System.out.println();
-			timeout = new Timeout(Duration.create(5, "seconds"));
+			timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			future = Patterns.ask(players.get(i), "get hand", timeout);
 			HandOfCards currentHand = null;
 			try {
@@ -922,7 +924,7 @@ public class HandOfPoker {
 			//UI.printout(winners.get(0).playerName + " wins with a " + winners.get(0).getHandType());
 		//	UI.printout("## " + winners.get(0).playerName + " gets " + pot/winners.size() + " chips. ##\n");
 
-			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+			Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			Future<Object> future = Patterns.ask(winners.get(0), "get hand type", timeout);
 			String result = "null";
 			try {
@@ -948,7 +950,7 @@ public class HandOfPoker {
 			for (int i=0; i<winners.size(); i++){
 				//twitter.appendToCompoundTweet(winners.get(0).playerName + " ties with a " + winners.get(0).getHandType());
 				//UI.printout(winners.get(0).playerName + " ties with a " + winners.get(0).getHandType());
-				Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+				Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 				Future<Object> future = Patterns.ask(winners.get(0), "get hand type", timeout);
 				String result = "null";
 				try {

@@ -7,6 +7,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -60,10 +62,16 @@ public class PlayerClient {
     }
 
     private static Config createConfig() {
+        String address = "0.0.0.0";
+        try {
+            address = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("akka.actor.provider", "akka.remote.RemoteActorRefProvider");
         map.put("akka.remote.transport", "akka.remote.netty.NettyRemoteTransport");
-        map.put("akka.remote.netty.tcp.hostname", "127.0.0.1");
+        map.put("akka.remote.netty.tcp.hostname", address);
         map.put("akka.remote.netty.tcp.port", "2701");
         return ConfigFactory.parseMap(map);
     }
