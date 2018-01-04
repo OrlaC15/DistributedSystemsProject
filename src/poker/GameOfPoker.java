@@ -2,6 +2,7 @@ package poker;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
 import akka.actor.Props;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
@@ -27,6 +28,7 @@ public class GameOfPoker implements Runnable{
 	ActorRef player;
 	ActorRef dealer;
 	OutputTerminal a;
+	ActorSystem system;
 
 	/*
 	public GameOfPoker(String username, TwitterInteraction t, DeckOfCards d) throws InterruptedException{
@@ -60,6 +62,7 @@ public class GameOfPoker implements Runnable{
 	ActorSystem gameSystem;
 
 	public GameOfPoker(ActorRef dealer, ActorRef player, ActorRef deck, ActorSystem gameSystem) throws InterruptedException {
+		system = gameSystem;
 		this.player = player;
 		this.dealer = dealer;
 		playerName = player.path().name();
@@ -86,6 +89,17 @@ public class GameOfPoker implements Runnable{
 		try {
 			while(!playerWin && !playerLose && continueGame && !(Thread.currentThread().isInterrupted())){
 				HandOfPoker handOfPoker = new HandOfPoker(players,ante,deck,a, player, dealer);
+				continueGame = handOfPoker.gameLoop();
+
+				System.out.println("continuegame was "+continueGame);
+				if(continueGame == false){
+					//player.tell("goodbye", dealer);
+					a.printout("Goodbye, thanks for playing!");
+					player.tell(PoisonPill.getInstance(),dealer);
+					dealer.tell(PoisonPill.getInstance(), ActorRef.noSender());
+					system.shutdown();
+					break;
+				}
 
 				ArrayList<ActorRef> nextRoundPlayers = new ArrayList<>();
 				

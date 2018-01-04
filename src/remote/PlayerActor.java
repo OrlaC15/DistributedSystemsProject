@@ -2,6 +2,7 @@ package remote;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 
 import com.typesafe.config.Config;
@@ -67,11 +68,13 @@ public class PlayerActor extends UntypedActor {
     }
 
     private static Config createConfig() {
+        Random r = new Random();
+        int Result = r.nextInt(1000 - 1) + 1;
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("akka.actor.provider", "akka.remote.RemoteActorRefProvider");
         map.put("akka.remote.transport", "akka.remote.netty.NettyRemoteTransport");
         map.put("akka.remote.netty.tcp.hostname", "127.0.0.1");
-        map.put("akka.remote.netty.tcp.port", "2701");
+        map.put("akka.remote.netty.tcp.port", 2700 + Result);
         return ConfigFactory.parseMap(map);
     }
 

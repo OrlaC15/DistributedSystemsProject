@@ -56,13 +56,7 @@ public class HandOfPoker {
 		this.deck = deck;
 		this.UI = new OutputTerminal(dealer,player);
 		this.human = (ActorRef) players.get(0);
-		//pot.set(0);
 
-		try {
-			gameLoop();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 
 
@@ -72,7 +66,7 @@ public class HandOfPoker {
 	 * @throws InterruptedException 
 	 * @throws IOException
 	 */
-	void gameLoop() throws InterruptedException, IOException {
+	boolean gameLoop() throws InterruptedException, IOException {
 
 		setUpFilePrint();
 
@@ -129,12 +123,24 @@ public class HandOfPoker {
 		}
 
 
-		human.tell("reply for next round", dealer);
+		Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
+		Future<Object> future = Patterns.ask(human, "reply for next round", timeout);
+		String response = "";
+		try {
+			response = (String) Await.result(future, timeout.duration());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
+		if(response.compareToIgnoreCase("leave")==0){
+			return false;
+		}
 
 		if (PRINT_TEST_FILE){
 			writer.close();
 		}
+
+		return true;
 	}
 
 	/**

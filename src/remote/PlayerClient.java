@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 
 public class PlayerClient {
@@ -58,6 +59,11 @@ public class PlayerClient {
         final String path = "akka.tcp://GameSystem@"+ipAddress+":2600/user/Game";
         ActorRef dealerActor = playerSystem.actorFor(path);
         dealerActor.tell("Play", me);
+        while (true){
+            if(me.isTerminated()){
+                System.exit(0);
+            }
+        }
 
     }
 
@@ -68,11 +74,13 @@ public class PlayerClient {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
+        Random r = new Random();
+        int Result = r.nextInt(1000 - 1) + 1;
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("akka.actor.provider", "akka.remote.RemoteActorRefProvider");
         map.put("akka.remote.transport", "akka.remote.netty.NettyRemoteTransport");
         map.put("akka.remote.netty.tcp.hostname", address);
-        map.put("akka.remote.netty.tcp.port", "2701");
+        map.put("akka.remote.netty.tcp.port", (2700 + Result));
         return ConfigFactory.parseMap(map);
     }
 }

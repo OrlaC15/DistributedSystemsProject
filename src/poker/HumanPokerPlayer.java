@@ -452,8 +452,7 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 	}
 
 
-
-	public void replyForNextRound() throws   InterruptedException {
+	public String replyForNextRound() throws   InterruptedException {
 		String[] positiveResponses = {
 				"Great game!",
 				"Well played!",
@@ -463,10 +462,11 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 				"What a hand to win with, eh?!"
 		};
 		Random rand = new Random();
-;
+
 		output.printout(positiveResponses[rand.nextInt(positiveResponses.length)] + " Ready for the next round?");
-		output.printout("reply Leave to leave or reply to continue..");
-		output.readInString();
+		output.printout("reply with 'leave' to leave or reply with anything else to continue..");
+		String response = output.readInString();
+		return response;
 	}
 
 	@Override
@@ -529,7 +529,8 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 		}
 
 		if(o.toString().contains("reply for next round")){
-			this.replyForNextRound();
+			String response = this.replyForNextRound();
+			getSender().tell(response, getSelf());
 		}
 
 		if(o.toString().contains("are you human?")){
@@ -563,10 +564,6 @@ public class HumanPokerPlayer extends PokerPlayer implements Runnable {
 
 		if(o.toString().compareTo("tweet initial cards")==0){
 			tweetInitialCards();
-		}
-
-		if(o.toString().compareTo("reply for next round")==0){
-			replyForNextRound();
 		}
 
 		if(o.toString().compareTo("round overall bet")==0){
