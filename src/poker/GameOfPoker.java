@@ -19,7 +19,6 @@ public class GameOfPoker implements Runnable{
 	public  static PrintStream defaultPrintStream = System.out;
 	public String playerName = "";
 	public ActorRef humanPlayer, deck;
-	//private TwitterInteraction twitter;
 	ArrayList<ActorRef> players = new ArrayList<ActorRef>(6);
 	boolean playerWin = false;
 	boolean playerLose = false;
@@ -29,32 +28,6 @@ public class GameOfPoker implements Runnable{
 	ActorRef dealer;
 	OutputTerminal a;
 	ActorSystem system;
-
-	/*
-	public GameOfPoker(String username, TwitterInteraction t, DeckOfCards d) throws InterruptedException{
-		playerName = username;
-		deck = d;
-		humanPlayer = new HumanPokerPlayer(deck, t);
-		twitter = t;
-		players.add(humanPlayer);
-		for(int i=0;i<5;i++){
-			PokerPlayer computerPlayer = new AutomatedPokerPlayer(deck, twitter);
-			players.add(computerPlayer);	
-		}
-	}*/
-	/*
-	public GameOfPoker(String username,  DeckOfCards d) throws InterruptedException{
-		playerName = username;
-		deck = d;
-		humanPlayer = new HumanPokerPlayer(deck);
-		players.add(humanPlayer);
-		for(int i=0;i<5;i++){
-			PokerPlayer computerPlayer = new AutomatedPokerPlayer(deck, a);
-			players.add(computerPlayer);	
-		}
-	}*/
-	
-	
 
 	public static final int PLAYER_POT_DEFAULT = 20;
 	public static final int ROUND_NUMBER = 0;
@@ -67,15 +40,11 @@ public class GameOfPoker implements Runnable{
 		this.dealer = dealer;
 		playerName = player.path().name();
 		this.deck = deck;
-		//this.gameSystem = referrer;
 		a = new OutputTerminal(dealer, player);
-		//humanPlayer = new HumanPokerPlayer(deck,dealer,player,a);
-		 humanPlayer = gameSystem.actorOf(Props.create(HumanPokerPlayer.class, deck, dealer, player, a), "Human");
+		humanPlayer = gameSystem.actorOf(Props.create(HumanPokerPlayer.class, deck, dealer, player, a), "Human");
 		players.add(humanPlayer);
 		for(int i=0;i<2;i++){
 			ActorRef computerPlayer = gameSystem.actorOf(Props.create(AutomatedPokerPlayer.class, deck, a), "Comp"+(i+1));
-			//PokerPlayer computerPlayer = new AutomatedPokerPlayer(deck, a);
-
 			players.add(computerPlayer);
 		}
 
@@ -93,7 +62,6 @@ public class GameOfPoker implements Runnable{
 
 				System.out.println("continuegame was "+continueGame);
 				if(continueGame == false){
-					//player.tell("goodbye", dealer);
 					a.printout("Goodbye, thanks for playing!");
 					player.tell(PoisonPill.getInstance(),dealer);
 					dealer.tell(PoisonPill.getInstance(), ActorRef.noSender());
@@ -164,12 +132,6 @@ public class GameOfPoker implements Runnable{
 		}  catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public static void main(String[] args) throws InterruptedException {
-		//DeckOfCards deck = new DeckOfCards();
-		//GameOfPoker test = new GameOfPoker(null,null, deck);
-		//test.run();
 	}
 
 }

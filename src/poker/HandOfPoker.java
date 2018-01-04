@@ -4,7 +4,6 @@ import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
-//import com.sun.org.apache.bcel.internal.generic.ACONST_NULL;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -21,12 +20,10 @@ public class HandOfPoker {
 
 	final private static int OPENING_HAND = HandOfCards.ONE_PAIR_DEFAULT;
 	public int highBet = 0;
-	//public static final int TIMEOUT = Integer.MAX_VALUE;
 	public static final int TIMEOUT = 1000000;
 
 	private ArrayList<ActorRef> players;
 	int ante;
-	//public static ThreadLocal<Integer> pot = new ThreadLocal<Integer>();
 	public int pot;
 
 
@@ -48,9 +45,7 @@ public class HandOfPoker {
 		this.dealer = dealer;
 		this.players.addAll(players);
 		for (int i=0; i< this.players.size(); i++){
-			//this.players.get(i).passHandOfPokerRef(this);
 			this.players.get(i).tell(this,dealer);
-
 		}
 		this.ante = ante;
 		this.deck = deck;
@@ -86,13 +81,7 @@ public class HandOfPoker {
 		players.clear();
 		for (ActorRef name: betRecordz.keySet()){
 			players.add(name);
-		} 
-/*
-
-		UI.printout("players.size() is "+players.size());
-		UI.printout("betRecordz.size() is "+betRecordz.size());
-*/
-
+		}
 
 		if (betRecordz.size() > 1){
 			discardCards();
@@ -163,16 +152,12 @@ public class HandOfPoker {
 			}
 
 			if (pot < lowestPot){
-				//lowestPot = players.get(i).playerPot;
-				//lowestPotName = players.get(i).playerName;
 				lowestPot = pot;
 				lowestPotName = players.get(i).path().name();
 			}
 		}
 
 		for (int i=0; i<players.size(); i++){
-			//players.get(i).lowestPotBetLimit = lowestPot;
-			//players.get(i).lowestPotPlayerName = lowestPotName;
 			players.get(i).tell("set lowest pot:"+lowestPot, dealer);
 			players.get(i).tell("lowest pot player name:"+lowestPotName,dealer);
 		}
@@ -190,7 +175,7 @@ public class HandOfPoker {
 				writer.println("The first line");
 				writer.println("The second line");
 			} catch (IOException e) {
-				// do something
+				e.printStackTrace();
 			}
 		}
 	}
@@ -240,7 +225,6 @@ public class HandOfPoker {
 				ActorRef currentRef = players.get(i);
 				System.out.println("current ref "+currentRef);
 				currentRef.tell("deal new hand", dealer);
-				//players.get(i).dealNewHand();
 			}
 		} while (checkOpen() == false);
 	}
@@ -321,10 +305,6 @@ public class HandOfPoker {
 		ArrayList<ActorRef> playersNotFolded = new ArrayList<>();
 
 
-
-		//testPrint(players, playersNotFolded, betRecord, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\nBefore first betting loop.");
-
-		// 1
 		// First bet loop goes until a player raises
 		setLowestPotBounds();
 		testPrint("First Betting Loop: until someone raises");
@@ -386,10 +366,6 @@ public class HandOfPoker {
 			playersNotFolded.add(players.get(i));
 			foldStatus.put(players.get(i), false);
 			betRecordz.put(players.get(i), bet);
-			//testPrint(players, playersNotFolded, betRecord, "player " + i +  " finishes first loop");
-			//testPrint(players, playersNotFolded, betRecord, "player " + i +  " finishes first loop");
-
-
 		}
 
 
@@ -397,10 +373,6 @@ public class HandOfPoker {
 
 		testShowBanks();
 
-		//testPrint(players, playersNotFolded, betRecord, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\nBefore second betting loop.");
-
-
-		// 2
 		// Go back around again and see who raises and give the first raiser a second chance to raise
 		for (int i =(firstRaiserIndex + 1)%players.size(); i != firstRaiserIndex; i = (i+1)%players.size()) {
 
@@ -415,8 +387,6 @@ public class HandOfPoker {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			//int bet = players.get(i).getBet();
 
 			testPrint("bet = " + bet);
 			boolean raiseMessage = false;
@@ -438,34 +408,23 @@ public class HandOfPoker {
 					testPrint("i > firstRaiser index");
 					playersNotFolded.add(players.get(i));
 					foldStatus.put(players.get(i), false);
-					//betRecord.add(bet);
 					betRecordz.put(players.get(i), bet);
-					//players.get(i).subtractChips(bet);
 					pot += bet;
 					if (raiseMessage) {
-						//UI.printout(players.get(i).playerName + " raises the bet to " + highBet + " chips.");
 						UI.printout(players.get(i).path().name() + " raises the bet to " + highBet + " chips.");
 					}
 					else {
-						//UI.printout(players.get(i).playerName + " sees the bet of " + highBet + " chips.");
 						UI.printout(players.get(i).path().name() + " sees the bet of " + highBet + " chips.");
 					}
 				}
 				else {
 					testPrint("i <= firstRaiser index");
-					//pot += bet - betRecord.get(i);
 					pot+= bet - betRecordz.get(players.get(i));
-					//players.get(i).subtractChips(bet - betRecord.get(i));
 
 
-				//	UI.printout(players.get(i).playerName + " sees the bet of " + highBet
-				//			+ " and throws in the additional " + (bet - betRecordz.get(players.get(i))/*betRecord.get(i)*/) + " chips.\n");
-					UI.printout(players.get(i).path().name() + " sees the bet of " + highBet
-							+ " and throws in the additional " + (bet - betRecordz.get(players.get(i))/*betRecord.get(i)*/) + " chips.\n");
+				UI.printout(players.get(i).path().name() + " sees the bet of " + highBet
+							+ " and throws in the additional " + (bet - betRecordz.get(players.get(i))) + " chips.\n");
 
-
-
-					//betRecord.set(i, bet);
 					betRecordz.replace(players.get(i), bet);
 
 				}
@@ -476,13 +435,11 @@ public class HandOfPoker {
 				if (i <= firstRaiserIndex){
 					UI.printout("\n\n\n\nFOLDED\n\n\n\n");
 					testPrint("i <= firstRaiser index " + firstRaiserIndex + " removing them.");
-					//betRecord.remove(i);
 					betRecordz.remove(players.get(i));
 					foldStatus.put(players.get(i), true);
 					playersNotFolded.remove(i);
 				}
 
-				//UI.printout(players.get(i).playerName + " folds.");
 				UI.printout(players.get(i).path().name() + " folds.");
 
 
@@ -493,19 +450,13 @@ public class HandOfPoker {
 			}
 
 
-			//	testPrint(players, playersNotFolded, betRecord, "player " + i +  " finishes second loop");
 		}
 
 
 
 		testShowBanks();
 
-		//testPrint(players, playersNotFolded, betRecord, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\nBefore third loop swap.");
-
-
 		// Call the bets back around to the last raiser if there are still enough players not folded
-		//players.clear();
-		//players.addAll(playersNotFolded);
 		ArrayList<ActorRef> proceed = new ArrayList<>();
 		for(int i =0;i<players.size();i++){
 			if(foldStatus.get(players.get(i))==false){
@@ -515,7 +466,6 @@ public class HandOfPoker {
 		players.clear();
 		players.addAll(proceed);
 
-		//testPrint(players, playersNotFolded, betRecord, "After third loop swap.");
 		setLowestPotBounds();
 		int lastRaiserIndex = -1;
 		for (int i =0; i< players.size(); i++){
@@ -531,7 +481,6 @@ public class HandOfPoker {
 			testPrint("lastRaiserIndex  = " + lastRaiserIndex);
 			foldStatus.clear();
 			for (int i = (lastRaiserIndex+1)%players.size(); i != lastRaiserIndex; i = (i+1)%players.size()){
-				//UI.printout("Player " + i);
 				Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 				Future<Object> future = Patterns.ask(players.get(i), "has matched high bet", timeout);
 				boolean hasMatchedHighBet = false;
@@ -542,7 +491,6 @@ public class HandOfPoker {
 				}
 
 
-				//if (!players.get(i).hasMatchedHighBet()){
 				if (!hasMatchedHighBet){
 					timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 					System.out.println("getting call from "+players.get(i).path().name());
@@ -554,10 +502,6 @@ public class HandOfPoker {
 						e.printStackTrace();
 					}
 
-
-				//	int bet = players.get(i).getCall();
-
-					//UI.printout(players.get(i).playerName + " bets " + bet + " & high bet = " + this.highBet);
 
 					testPrint("bet = " + bet);
 					if (bet != 0){
@@ -653,8 +597,6 @@ public class HandOfPoker {
 	 * @throws IOException
 	 */
 	private void discardCards() throws InterruptedException, IOException {
-		//human.discard();
-		//players.set(0, human);
 		for (int i=0; i<players.size(); i++){
 			System.out.println(i);
 
@@ -691,10 +633,6 @@ public class HandOfPoker {
 		ActorRef handWinner = getHandWinner();
 
 		for (int i=0; i<players.size(); i++){
-			//UI.printout(players.get(i).path().name() + " says ");
-
-
-
 			players.get(i).tell("show cards:"+handWinner.path().toString(), dealer);
 		}
 	}
@@ -815,9 +753,6 @@ public class HandOfPoker {
 		if (winners.size() == 1){
 
 			UI.printout("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			//UI.printout(winners.get(0).playerName + " wins with a " + winners.get(0).getHandType());
-		//	UI.printout("## " + winners.get(0).playerName + " gets " + pot/winners.size() + " chips. ##\n");
-
 			Timeout timeout = new Timeout(Duration.create(TIMEOUT, "seconds"));
 			Future<Object> future = Patterns.ask(winners.get(0), "get hand type", timeout);
 			String result = "null";
@@ -831,8 +766,6 @@ public class HandOfPoker {
 
 			UI.printout("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
-
-			//winners.get(0).awardChips(pot);
 			winners.get(0).tell("award chips:"+pot, dealer);
 
 
