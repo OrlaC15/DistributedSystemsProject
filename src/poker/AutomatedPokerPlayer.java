@@ -28,13 +28,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 
 
 
-	/*public AutomatedPokerPlayer(DeckOfCards inputDeck, TwitterInteraction t) throws InterruptedException {
-		super(inputDeck);
-		playerName = getPlayerName(FILE_OF_NAMES);
-		playerType = randomPokerPlayerType();
-		playerBluffProbability = getBluffProbability();
-		twitter = t;
-	}*/
+
 	
 	public AutomatedPokerPlayer(ActorRef inputDeck, OutputTerminal UI) throws InterruptedException {
 		super(inputDeck);
@@ -166,7 +160,6 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 		int betValue = getBetValueCalculation();
 		int callValue = getCallValueCalculation(betValue);
 		int returnValue = 0;
-		//output.printout("\n\n                   pot before call: " + this.playerPot);		
 
 		if(betValue >= currentRound.highBet && callValue > currentRound.highBet){
 			returnValue = see(betValue);	
@@ -175,7 +168,6 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 		else{
 			returnValue = 0;
 		}
-		//output.printout("         pot after call: " + this.playerPot);		
 
 		return returnValue;
 	}
@@ -195,11 +187,9 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 		//if nobody has bet
 		if(currentRound.highBet == 0){
 			if(this.hand.getGameValue() < 100500000){
-				//output.printout("I check");
 				output.printout("I check");
 			}
 			else{
-				//output.printout("I bet " + betValue + " to start.");
 				output.printout("I bet " + betValue + " to start.");
 			}
 			returnValue = betValue;
@@ -245,10 +235,8 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 		this.roundOverallBet+=returnValue;
 		
 		
-		//output.printout("\n\n         pot before bet: " + this.playerPot);		
 		this.subtractChips(returnValue);
-		//output.printout("         pot after bet: " + this.playerPot);
-	
+
 		
 		return returnValue;
 	}
@@ -294,14 +282,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	 */
 	private int raise(int betValue){
 		int raiseValue = betValue - currentRound.highBet;
-		/*
-		if(playerType < 4){
-			output.printout(getPlayerQuote(CONSERVATIVE_RAISE) + "I raise " + raiseValue + " chips.");
-		}
-		else{
-			output.printout(getPlayerQuote(COCKY_RAISE) + "I raise " + raiseValue + " chips.");
-		}
-*/
+
 		return raiseValue;
 	}
 
@@ -311,7 +292,6 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	private int reRaise(int betValue){
 		int raiseValue = betValue - currentRound.highBet;
 
-		//output.printout("I re-raise the betting by " + raiseValue + " chips.");
 		return raiseValue;
 	}
 
@@ -320,13 +300,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	 */
 	private int fold(int betValue){
 		betValue = 0;
-/*
-		if(playerType < 4){
-			output.printout(getPlayerQuote(CONSERVATIVE_FOLD));
-		}
-		else{
-			output.printout(getPlayerQuote(COCKY_FOLD));
-		}*/
+
 		return betValue;
 	}
 
@@ -425,6 +399,7 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 		if(o.toString().compareTo("has matched high bet")==0){
 			getSender().tell(hasMatchedHighBet(), getSelf());
 		}
+
 
 		if(o.toString().compareTo("player pot")==0){
 			getSender().tell(playerPot, getSelf());
