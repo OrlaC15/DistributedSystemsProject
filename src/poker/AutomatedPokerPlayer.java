@@ -25,6 +25,9 @@ public class AutomatedPokerPlayer extends PokerPlayer {
 	OutputTerminal output = new OutputTerminal(null,null);
 	private int currentBet;
 
+
+
+
 	/*public AutomatedPokerPlayer(DeckOfCards inputDeck, TwitterInteraction t) throws InterruptedException {
 		super(inputDeck);
 		playerName = getPlayerName(FILE_OF_NAMES);
